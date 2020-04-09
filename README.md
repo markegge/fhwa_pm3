@@ -16,12 +16,10 @@ To calculate LOTTR or TTTR Metric scores:
 
 1. Download the shapefiles for the desired year(s) from (https://npmrds.ritis.org/analytics/shapefiles)[https://npmrds.ritis.org/analytics/shapefiles]
 2. Generate TMC List with the `tmc_list` function, 
-
-    ```R
+    ```r
     # Export list of Interstate TMCs for TTTR calculations
     tmc_list(infile = "shp/Utah/Utah.shp", tmcs = "interstate", outfile = "out/tmcs.txt")
     ```
-
 3. Log in to RITIS [https://npmrds.ritis.org/analytics/](https://npmrds.ritis.org/analytics/)
 4. Go to Massive Data Downloader
 5. Choose the appropriate "TMC segments from" value (e.g. "NPMRDS INRIX 2019")
@@ -43,7 +41,7 @@ To calculate LOTTR or TTTR Metric scores:
                              period = "monthly", 
                              verbose = TRUE)
     ```
-
+12. Done
 
 ### A Full Example
 
