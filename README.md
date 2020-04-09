@@ -15,8 +15,8 @@ devtools::install_bitbucket("high-street/pm3")
 To calculate LOTTR or TTTR Metric scores:
 
 1. Download the shapefiles for the desired year(s) from (https://npmrds.ritis.org/analytics/shapefiles)[https://npmrds.ritis.org/analytics/shapefiles]
-2. Generate TMC List with the `tmc_list` function, 
-    ```r
+2. Generate TMC List with the `tmc_list` function:
+    ```R
     # Export list of Interstate TMCs for TTTR calculations
     tmc_list(infile = "shp/Utah/Utah.shp", tmcs = "interstate", outfile = "out/tmcs.txt")
     ```
