@@ -63,23 +63,27 @@ tmc_list("shp/Wyoming_2017/Wyoming.shp", outfile = "out/tmcs_2017.txt")
 tmc_list("shp/Wyoming_2018/Wyoming.shp", outfile = "out/tmcs_2018.txt")
 tmc_list("shp/Wyoming_2019/Wyoming.shp", outfile = "out/tmcs_2019.txt")
 
+tmc_list("shp/Wyoming_2017/Wyoming.shp", tmcs = "interstate", outfile = "out/tmcs_interstate_2017.txt")
+tmc_list("shp/Wyoming_2018/Wyoming.shp", tmcs = "interstate", outfile = "out/tmcs_interstate_2018.txt")
+tmc_list("shp/Wyoming_2019/Wyoming.shp", tmcs = "interstate", outfile = "out/tmcs_interstate_2019.txt")
+
 #
-#  ** DOWNLOAD AND EXTRACT NPMRDS DATA **
+#  ** DOWNLOAD AND EXTRACT NPMRDS DATA BASED ON TMC LISTS FROM PREVIOUS STEP **
+#
+# Update paths below appropriately...
 #
 
-# Score Segments -------------------------------------------------------------
-# Update paths below appropriately...
+
+# LOTTR --------------------------------------------------------
 lottr_2017 <- score("data/md_2017/md_2017.csv", metric = "LOTTR")
 lottr_2018 <- score("data/md_2018/md_2018.csv", metric = "LOTTR")
 lottr_2019 <- score("data/md_2019/md_2019.csv", metric = "LOTTR")
 
-# LOTTR ------------------
 lottr_2017 <- merge(st_drop_geometry(shp_2017), lottr_2017, by.x = "Tmc", by.y = "tmc_code")
 lottr_2018 <- merge(st_drop_geometry(shp_2018), lottr_2018, by.x = "Tmc", by.y = "tmc_code")
 lottr_2019 <- merge(st_drop_geometry(shp_2019), lottr_2019, by.x = "Tmc", by.y = "tmc_code")
 
 lottr <- rbindlist(list(lottr_2017, lottr_2018, lottr_2019))
-
 setDT(lottr)
 
 lottr[, nhs_miles := Miles * NHS_Pct * 0.01]
@@ -92,24 +96,16 @@ lottr[,
       by = .(interstate, year)]
 
 
-# TTTR -------------------------------------
-tmc_list("shp/Wyoming_2017/Wyoming.shp", tmcs = "interstate", outfile = "out/tmcs_interstate_2017.txt")
-tmc_list("shp/Wyoming_2018/Wyoming.shp", tmcs = "interstate", outfile = "out/tmcs_interstate_2018.txt")
-tmc_list("shp/Wyoming_2019/Wyoming.shp", tmcs = "interstate", outfile = "out/tmcs_interstate_2019.txt")
-
-# Download annual datasets from RITIS
-
+# TTTR ----------------------------------------------------------
 tttr_2017 <- score("data/md_trucks_2018/md_int_2017.csv", metric = "TTTR")
 tttr_2018 <- score("data/md_trucks_2018/md_int_2018.csv", metric = "TTTR")
 tttr_2019 <- score("data/md_trucks_2019/md_int_2019.csv", metric = "TTTR")
 
-# TTTR ------------------
 tttr_2017 <- merge(st_drop_geometry(shp_2017), tttr_2017, by.x = "Tmc", by.y = "tmc_code")
 tttr_2018 <- merge(st_drop_geometry(shp_2018), tttr_2018, by.x = "Tmc", by.y = "tmc_code")
 tttr_2019 <- merge(st_drop_geometry(shp_2019), tttr_2019, by.x = "Tmc", by.y = "tmc_code")
 
 tttr <- rbindlist(list(tttr_2017, tttr_2018, tttr_2019))
-
 setDT(tttr)
 
 tttr <- tttr[F_System == 1]
