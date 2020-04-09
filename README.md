@@ -16,8 +16,11 @@ To calculate LOTTR or TTTR Metric scores:
 
 1. Download the shapefiles for the desired year(s) from (https://npmrds.ritis.org/analytics/shapefiles)[https://npmrds.ritis.org/analytics/shapefiles]
 2. Generate TMC List with the `tmc_list` function:
+
+```R
     # Export list of Interstate TMCs for TTTR calculations
     tmc_list(infile = "shp/Utah/Utah.shp", tmcs = "interstate", outfile = "out/tmcs.txt")
+```
 
 3. Log in to RITIS [https://npmrds.ritis.org/analytics/](https://npmrds.ritis.org/analytics/)
 4. Go to Massive Data Downloader
@@ -32,11 +35,14 @@ To calculate LOTTR or TTTR Metric scores:
 9. Set averaging to 15 minutes (per PM3 Final Rule)
 10. Download and extract the resulting dataset
 11. Calculate scores using `score_pm3` 
+
+```R
     # Calculate monthly TTTR metric scores
     tttr_scores <- score_pm3("data/Trucks/Readings.csv", 
                              metric = "TTTR", 
                              period = "monthly", 
                              verbose = TRUE)
+```
 
 
 ### A Full Example
