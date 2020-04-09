@@ -15,3 +15,5 @@ Imports:
 	data.table (>= 1.12.8),
 	sf (>= 0.9)
 RoxygenNote: 7.1.0
+Suggests: 
+    testthat

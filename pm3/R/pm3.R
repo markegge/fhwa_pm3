@@ -11,7 +11,7 @@
 #' @section PM3 functions:
 #' The functions
 #' \code{tmc_list} generates a list of TMC segments in RITIS format for data downloads
-#' \code{score_pm3} calculates segment-level LOTTR and TTTR metric scores for segments,
+#' \code{score} calculates segment-level LOTTR and TTTR metric scores for segments,
 #'   including (optionally) by month
 #' 
 #'

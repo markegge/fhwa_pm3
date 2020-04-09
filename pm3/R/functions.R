@@ -50,14 +50,13 @@ tmc_list <- function(infile, tmcs = "all", outfile = "") {
 #' @return A data.table of LOTTR/TTTR scores by TMC
 #' 
 #' @examples
-#' score_pm3(fread("data/All_Vehicles_2019/Readings.csv"), metric = "LOTTR")
-#' score_pm3(fread("data/Trucks_2019/Readings.csv"), metric = "TTTR")
-#' 
-#' DT <- fread("data/All_Vehicles_2019/Readings.csv")
-#' DT[, score_pm3
+#' \dontrun{
+#' score("data/All_Vehicles/Readings.csv", metric = "LOTTR")
+#' score("data/Trucks/Readings.csv", metric = "TTTR", period = "monthly")
+#' }
 #' 
 #' @export
-score_pm3 <- function(input_file, metric = "LOTTR", period = "none", verbose = FALSE) {
+score <- function(input_file, metric = "LOTTR", period = "none", verbose = FALSE) {
   DT <- fread(input_file)
   
   if(verbose)
@@ -127,4 +126,3 @@ score_pm3 <- function(input_file, metric = "LOTTR", period = "none", verbose = F
   
   return(scores)
 }
-

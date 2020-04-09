@@ -4,12 +4,12 @@
 \alias{tmc_list}
 \title{Generate a list of TMCs from a shapefile}
 \usage{
-tmc_list(infile, interstate = FALSE, outfile = "")
+tmc_list(infile, tmcs = "all", outfile = "")
 }
 \arguments{
 \item{infile}{Path to the input shapefile file}
 
-\item{interstate}{Should the list of TMCs be limited to Interstate NHS TMCs only?}
+\item{tmcs}{"all" or "interstate" - Filter TMCs}
 
 \item{outfile}{Optional, path to write resulting list to a .txt file}
 }
