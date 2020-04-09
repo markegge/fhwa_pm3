@@ -1,6 +1,6 @@
 # FHWA PM3 NPMRDS Travel Time Reliability Processing Tools
 
-NPMRDS Travel Time data is genearlly too voluminous to be effectively managed or manipulated using "common" desktop tools such as Microsoft Excel or Tableau. This repository provides some scripts and tools for effectively working with voluminous NPMRDS data.
+NPMRDS Travel Time data is genearlly too voluminous to be effectively managed or manipulated using "common" desktop tools such as Microsoft Excel or Tableau. This repository provides some scripts and tools written in R for effectively working with voluminous NPMRDS data.
 
 ## Installation
 
@@ -121,9 +121,11 @@ tttr[, .(tttr_index = sum(max_tttr * nhs_miles) / sum(nhs_miles)), by = year]
 
 The PM3 Performance measures are best described in [FHWA's June 1, 2017 PM3 Webinar Presentation](https://www.fhwa.dot.gov/tpm/rule/170601pm3.pdf)
 
-FWHA has also provided both [General Guidance and Step-by-Step Metric
-Calculation Procedures for National Performance Measures for
-Congestion, Reliability, and Freight, and CMAQ Traffic Congestion](https://www.fhwa.dot.gov/tpm/guidance/hif18040.pdf] and [FHWA Computation Procedure for Travel Time Based and Percent Non-Single Occupancy Vehicle (non-SOV) Travel Performance Measures](https://www.fhwa.dot.gov/tpm/guidance/hif18024.pdf). To be clear, these are two different 40+ page guides, published by FHWA within a month of each other—one created by a consultant, the other created by FHWA. 
+FWHA has also provided both:
+* [General Guidance and Step-by-Step Metric Calculation Procedures for National Performance Measures for Congestion, Reliability, and Freight, and CMAQ Traffic Congestion](https://www.fhwa.dot.gov/tpm/guidance/hif18040.pdf) 
+* [FHWA Computation Procedure for Travel Time Based and Percent Non-Single Occupancy Vehicle (non-SOV) Travel Performance Measures](https://www.fhwa.dot.gov/tpm/guidance/hif18024.pdf)
+
+To be clear, these are two different 40+ page guides, published by FHWA within a month of each other—one created by a consultant, the other created by FHWA. 
 
 If the two competing FHWA guides contradict themselves, reference the definitive [Federal Register PM3 Final Rule](https://www.federalregister.gov/documents/2018/05/31/2018-11652/national-performance-management-measures-assessing-performance-of-the-national-highway-system).
 
