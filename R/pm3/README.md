@@ -5,6 +5,6 @@
 ## Installation
 
 ```r
-require(devtools)
-install_bitbucket("high-street/pm3/R/pm3")
+library(devtools)
+devtools::install_bitbucket("high-street/pm3/R/pm3")
 ```
