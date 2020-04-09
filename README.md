@@ -50,21 +50,25 @@ library(data.table)
 library(pm3)
 library(sf)
 
-shp_2017 <- st_read("shp/Maryland_2017/Maryland.shp", stringsAsFactors = FALSE)
-shp_2018 <- st_read("shp/Maryland_2018/Maryland.shp", stringsAsFactors = FALSE)
-shp_2019 <- st_read("shp/Maryland_2019/Maryland.shp", stringsAsFactors = FALSE)
+shp_2017 <- st_read("shp/Wyoming_2017/Wyoming.shp", stringsAsFactors = FALSE)
+shp_2018 <- st_read("shp/Wyoming_2018/Wyoming.shp", stringsAsFactors = FALSE)
+shp_2019 <- st_read("shp/Wyoming_2019/Wyoming.shp", stringsAsFactors = FALSE)
 
 shp_2017$year <- 2017
 shp_2018$year <- 2018
 shp_2019$year <- 2019
 
 # Generate TMC Lists for RITIS Download --------------------------------------
-tmc_list("shp/Maryland_2017/Maryland.shp", outfile = "out/tmcs_2017.txt")
-tmc_list("shp/Maryland_2018/Maryland.shp", outfile = "out/tmcs_2018.txt")
-tmc_list("shp/Maryland_2019/Maryland.shp", outfile = "out/tmcs_2019.txt")
+tmc_list("shp/Wyoming_2017/Wyoming.shp", outfile = "out/tmcs_2017.txt")
+tmc_list("shp/Wyoming_2018/Wyoming.shp", outfile = "out/tmcs_2018.txt")
+tmc_list("shp/Wyoming_2019/Wyoming.shp", outfile = "out/tmcs_2019.txt")
+
+#
+#  ** DOWNLOAD AND EXTRACT NPMRDS DATA **
+#
 
 # Score Segments -------------------------------------------------------------
-# Extract RITIS export and update paths below appropriately
+# Update paths below appropriately...
 lottr_2017 <- score("data/md_2017/md_2017.csv", metric = "LOTTR")
 lottr_2018 <- score("data/md_2018/md_2018.csv", metric = "LOTTR")
 lottr_2019 <- score("data/md_2019/md_2019.csv", metric = "LOTTR")
@@ -89,9 +93,9 @@ lottr[,
 
 
 # TTTR -------------------------------------
-tmc_list("shp/Maryland_2017/Maryland.shp", tmcs = "interstate", outfile = "out/tmcs_interstate_2017.txt")
-tmc_list("shp/Maryland_2018/Maryland.shp", tmcs = "interstate", outfile = "out/tmcs_interstate_2018.txt")
-tmc_list("shp/Maryland_2019/Maryland.shp", tmcs = "interstate", outfile = "out/tmcs_interstate_2019.txt")
+tmc_list("shp/Wyoming_2017/Wyoming.shp", tmcs = "interstate", outfile = "out/tmcs_interstate_2017.txt")
+tmc_list("shp/Wyoming_2018/Wyoming.shp", tmcs = "interstate", outfile = "out/tmcs_interstate_2018.txt")
+tmc_list("shp/Wyoming_2019/Wyoming.shp", tmcs = "interstate", outfile = "out/tmcs_interstate_2019.txt")
 
 # Download annual datasets from RITIS
 
