@@ -154,3 +154,6 @@ Each year the TMC network is updated. This reflects improvements in TTI's confla
 
 The NPMRDS TMC network is a set of INRIX/HERE TMC segments to which selected HPMS attribtues have been conflated. There is a *two year lag* between the TMC network and the HPMS data. For example, the 2019 NPMRDS TMC network reflects AADT values based on 2017 HPMS. Since FHWA only requires traffic counts once every three years, some AADT values reported in the 2019 NPRMDS TMC network may be based on 2014 traffic counts. The NPMRDS reported AADT values should be calculating PM3 Performance Measures, but for other analysis it is better to use more recent sources of traffic counts. This notebook provides resources for estimating order-of-magnitude traffic volumes using NPMRDS data itself.
 
+## Attribution
+
+Package author: Mark Egge, High Street (egge@highstreetconsulting.com)
