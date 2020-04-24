@@ -3,6 +3,7 @@
 NPMRDS Travel Time data is genearlly too voluminous to be effectively managed or manipulated using "common" desktop tools such as Microsoft Excel or Tableau. This repository provides some scripts and tools written in R for effectively working with voluminous NPMRDS data.
 
 This package: 
+
 * Can be used to generate TMC Code lists to download the correct NPMRDS data for a given year
 * Create LOTTR and TTTR metric scores
 * Generate a HPMS Submittal File
