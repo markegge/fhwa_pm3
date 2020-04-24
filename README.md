@@ -2,6 +2,11 @@
 
 NPMRDS Travel Time data is genearlly too voluminous to be effectively managed or manipulated using "common" desktop tools such as Microsoft Excel or Tableau. This repository provides some scripts and tools written in R for effectively working with voluminous NPMRDS data.
 
+This package: 
+* Can be used to generate TMC Code lists to download the correct NPMRDS data for a given year
+* Create LOTTR and TTTR metric scores
+* Generate a HPMS Submittal File
+
 ## Installation
 
 ```r
@@ -10,7 +15,7 @@ devtools::install_bitbucket("high-street/pm3")
 ```
 
 
-## Instructions for Use
+## Calculating LOTTR and TTTR Metric Scores
 
 To calculate LOTTR or TTTR Metric scores:
 
@@ -116,6 +121,20 @@ tttr[, nhs_miles := Miles * NHS_Pct * 0.01]
 tttr[, .(tttr_index = sum(max_tttr * nhs_miles) / sum(nhs_miles)), by = year]
 
 ```
+
+## Creating an HPMS Submittal File
+
+The `hpms()` function outputs a .txt file in the appropriate format for HPMS submission. See the (HPMS Supplemental Guidance for PM3)[https://www.fhwa.dot.gov/tpm/guidance/pm3_hpms.pdf]
+
+Note, the input scores *must* be generated with verbose = TRUE.
+
+```R
+shp <- st_read("shp/Wyoming_2019/Wyoming.shp", stringsAsFactors = FALSE)
+lottr <- score("data/All_Vehicles/Readings.csv", metric = "LOTTR", verbose = TRUE)
+tttr <- score("data/Trucks/Readings.csv", metric = "TTTR", verbose = TRUE)
+hpms(shp, lottr, tttr)
+```
+
 
 ## PM3 Guidance
 
