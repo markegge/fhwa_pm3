@@ -16,7 +16,7 @@ aggregated by time period. If "none" scores will be computed by TMC for all
 data in the input file. "annual" only used if an input readings file contains
 data for multiple years (discouraged due to annual shapefile updates)}
 
-\item{verbose}{Provide diagnostic output}
+\item{verbose}{Provide diagnostic output and return all calculated values}
 }
 \value{
 A data.table of LOTTR/TTTR scores by TMC

@@ -20,5 +20,6 @@ The functions
 \code{tmc_list} generates a list of TMC segments in RITIS format for data downloads
 \code{score} calculates segment-level LOTTR and TTTR metric scores for segments,
   including (optionally) by month
+\code{hpms} generates an HPMS submission file in pipe delimiated format
 }
 

@@ -1,17 +1,32 @@
-#' Generate a list of TMCs from a shapefile
+#' Generate a list of PM3 TMCs from a shapefile
 #'
 #' This function creates a comma separated list of TMCs from a given
 #' network shapefile. This list of TMCs can be used with the RITIS
 #' Massive Data Downloader to download the correct set of data for a given year.
-#'
+#' Requires either "shp" or "infile"
+#' 
+#' @param shp A sf object with the corresponding shapefile
 #' @param infile Path to the input shapefile file
 #' @param tmcs "all" or "interstate" - Filter TMCs
 #' @param outfile Optional, path to write resulting list to a .txt file
 #' @return Character string TMCs to paste into RITIS
 #' 
+#' @examples
+#' \dontrun{
+#' shp <- sf::sf_read("shp/Alabama.shp")
+#' tmc_list(shp, tmcs = "interstate", outfile = "out/interstate_tmcs.txt")
+#' }
+#' 
 #' @export
-tmc_list <- function(infile, tmcs = "all", outfile = "") {
-  SF <- sf::st_read(infile, stringsAsFactors = FALSE)
+tmc_list <- function(shp = NULL, infile = "", tmcs = "all", outfile = "") {
+  if(!is.null(shp) & st_is(shp, "")) {
+    SF <- shp
+  } else if (infile != "") {
+    SF <- sf::st_read(infile, stringsAsFactors = FALSE)
+  } else {
+    cat("Please provide either a shapefile or shapefile path as an argument.")
+    return()
+  }
   
   if (tmcs == "interstate")
     SF <- SF[SF$F_System == 1, ]
@@ -46,7 +61,7 @@ tmc_list <- function(infile, tmcs = "all", outfile = "") {
 #'   aggregated by time period. If "none" scores will be computed by TMC for all
 #'   data in the input file. "annual" only used if an input readings file contains
 #'   data for multiple years (discouraged due to annual shapefile updates)
-#' @param verbose Provide diagnostic output
+#' @param verbose Provide diagnostic output and return all calculated values
 #' @return A data.table of LOTTR/TTTR scores by TMC
 #' 
 #' @examples
@@ -59,8 +74,9 @@ tmc_list <- function(infile, tmcs = "all", outfile = "") {
 score <- function(input_file, metric = "LOTTR", period = "none", verbose = FALSE) {
   DT <- fread(input_file)
   
-  if(verbose)
-    cat("Extracting dates and times from ", nrow(DT), " records...\n")
+  stopifnot(colnames(DT) == c("tmc_code", "measurement_tstamp", "travel_time_seconds"))
+    
+  cat("Read ", nrow(DT), " records. Estimated processing time: ", nrow(DT) / 1E7, " minutes.\n")
   
   DT[, `:=`(date = as.IDate(measurement_tstamp, format = "%Y-%m-%d %H:%M:%S"),
             time = as.ITime(measurement_tstamp, format = "%Y-%m-%d %H:%M:%S"))]
@@ -111,18 +127,130 @@ score <- function(input_file, metric = "LOTTR", period = "none", verbose = FALSE
   
   scores[, score := round(numerator / denominator, 2)]
   
+  vv <- "score"
+  if(verbose == TRUE)
+    vv = c("denominator", "numerator", vv)
+    
   if(period == "none") {
-    scores <- data.table::dcast(scores, tmc_code ~ nhpp_period, value.var = "score")
+    scores <- data.table::dcast(scores, tmc_code ~ nhpp_period, value.var = vv)
   } else if (period == "monthly" | period == "annual") {
-    scores <- data.table::dcast(scores, tmc_code + period ~ nhpp_period, value.var = "score")
+    scores <- data.table::dcast(scores, tmc_code + period ~ nhpp_period, value.var = vv)
   }
   
   if(metric == "LOTTR") {
-    scores[, max_lottr := pmax(weekday_am, weekday_mid, weekday_pm, weekend, na.rm = TRUE)]
+    if(verbose == TRUE) {
+      scores[, max_lottr := pmax(score_weekday_am, score_weekday_mid, score_weekday_pm, score_weekend, na.rm = TRUE)]
+    } else {
+      scores[, max_lottr := pmax(weekday_am, weekday_mid, weekday_pm, weekend, na.rm = TRUE)]
+    }
     scores[, reliable := max_lottr < 1.5]
   } else if (metric == "TTTR") {
-    scores[, max_tttr := pmax(weekday_am, weekday_mid, weekday_pm, weekend, overnight, na.rm = TRUE)]
+    if(verbose == TRUE) {
+      scores[, max_tttr := pmax(score_weekday_am, score_weekday_mid, score_weekday_pm, score_weekend, score_overnight, na.rm = TRUE)]
+    } else {
+      scores[, max_tttr := pmax(weekday_am, weekday_mid, weekday_pm, weekend, overnight, na.rm = TRUE)]
+    }
   }
   
   return(scores)
+}
+
+
+#' Generate an HPMS Submission File
+#'
+#' Generate an HPMS submission file in accordance with
+#' https://www.fhwa.dot.gov/tpm/guidance/pm3_hpms.pdf
+#' Requires the scores from score() to be run with verbose = TRUE
+#' Writes the resulting file to out/hpms_year.txt
+#' 
+#' @param shp The sf shapefile containing the corresponding shapefile
+#' @param lottr A data.table of LOTTR scores produced using \code{score(..., metric == "LOTTR")}
+#' @param tttr A data.table of TTTR scores produced using \code{score(..., metric == "TTTR")}
+#' @param year Year for which the file is being generated. Defaults to last year
+#' 
+#' @examples
+#' \dontrun{
+#' shp <- st_read("shp/Alabama_2019/Alabama.shp", stringsAsFactors = FALSE)
+#' lottr <- score("data/All_Vehicles/al_tt_seconds.csv", metric = "LOTTR", verbose = TRUE)
+#' tttr <- score("data/Trucks/aldot_2019_trucks.csv", metric = "TTTR", verbose = TRUE)
+#' hpms(shp, lottr, tttr)
+#' }
+#' 
+#' @export
+hpms <- function(shp, lottr, tttr, year = NA) {
+  if(is.na(year))
+    year <- year(Sys.Date()) - 1
+  
+  if(!("denominator_weekday_am" %in% colnames(lottr))) {
+    cat("Error, numerator and denominator fields missing. Try rerunning score() with verbose = TRUE")
+    return()
+  }
+  
+  df <- as.data.table(st_drop_geometry(shp))
+  
+  state <- unique(toupper(df$State))
+  stopifnot(length(state) == 1)
+  state_fips <- pm3:::fips_lookup[STATE_NAME == state]$FIPS_Code
+  
+  DT <- df[, .(Year_Record = year,
+               State_Code = state_fips,
+               Travel_Time_Code = Tmc,
+               F_System,
+               Urban_Code,
+               Facility_Type = FacilType,
+               NHS = ifelse(IsPrimary == "0", -1, NHS),
+               Segment_Length = round(Miles * NHS_Pct * 0.01, 3),
+               Directionality = sapply(Direction, function(x) switch(x, N = 1, S = 2, E = 3, W = 4, 5)),
+               DIR_AADT = as.integer(AADT * ifelse(FacilType == 1, 1.0, 0.5)),
+               PHED = "",
+               OCC_FAC = 1.7,
+               METRIC_SOURCE = 1,
+               Comments = "")]
+  
+  lottr_merge <- lottr[, .(Travel_Time_Code = tmc_code,
+                           LOTTR_AMP = score_weekday_am, 
+                           TT_AMP50PCT = denominator_weekday_am, 
+                           TT_AMP80PCT = numerator_weekday_am, 
+                           LOTTR_MIDD = score_weekday_mid, 
+                           TT_MIDD50PCT = denominator_weekday_mid, 
+                           TT_MIDD80PCT = numerator_weekday_mid, 
+                           LOTTR_PMP = score_weekday_pm, 
+                           TT_PMP50PCT = denominator_weekday_pm, 
+                           TT_PMP80PCT = numerator_weekday_pm, 
+                           LOTTR_WE = score_weekend, 
+                           TT_WE50PCT = denominator_weekend, 
+                           TT_WE80PCT = numerator_weekend)]
+  
+  tttr_merge <- tttr[, .(Travel_Time_Code = tmc_code,
+                         TTTR_AMP = score_weekday_am, 
+                         TTT_AMP50PCT = denominator_weekday_am, 
+                         TTT_AMP95PCT = numerator_weekday_am, 
+                         TTTR_MIDD = score_weekday_mid, 
+                         TTT_MIDD50PCT = denominator_weekday_mid, 
+                         TTT_MIDD95PCT = numerator_weekday_mid, 
+                         TTTR_PMP = score_weekday_pm, 
+                         TTT_PMP50PCT = denominator_weekday_pm, 
+                         TTT_PMP95PCT = numerator_weekday_pm, 
+                         TTTR_WE = score_weekend, 
+                         TTT_WE50PCT = denominator_weekend, 
+                         TTT_WE95PCT = numerator_weekend, 
+                         TTTR_OVN = score_overnight, 
+                         TTT_OVN50PCT = denominator_overnight,
+                         TTT_OVN95PCT = numerator_overnight)]
+  
+  DT <- merge(DT, lottr_merge, by = "Travel_Time_Code", all.x = TRUE)
+  DT <- merge(DT, tttr_merge, by = "Travel_Time_Code",  all.x = TRUE)
+  
+  
+  DT <- DT[, c("Year_Record", "State_Code", "Travel_Time_Code", "F_System", "Urban_Code", 
+               "Facility_Type", "NHS", "Segment_Length", "Directionality", "DIR_AADT", 
+               "LOTTR_AMP", "TT_AMP50PCT", "TT_AMP80PCT", "LOTTR_MIDD", "TT_MIDD50PCT", 
+               "TT_MIDD80PCT", "LOTTR_PMP", "TT_PMP50PCT", "TT_PMP80PCT", "LOTTR_WE", 
+               "TT_WE50PCT", "TT_WE80PCT", "TTTR_AMP", "TTT_AMP50PCT", "TTT_AMP95PCT", 
+               "TTTR_MIDD", "TTT_MIDD50PCT", "TTT_MIDD95PCT", "TTTR_PMP", "TTT_PMP50PCT", 
+               "TTT_PMP95PCT", "TTTR_WE", "TTT_WE50PCT", "TTT_WE95PCT", "TTTR_OVN", "TTT_OVN50PCT", 
+               "TTT_OVN95PCT", "PHED", "OCC_FAC", "METRIC_SOURCE", "Comments"), with = FALSE]
+  file_name <- paste0("out/hpms_", year, ".txt")
+  cat("Writing output to: ", file_name) 
+  write.table(DT, quote = FALSE, sep = "|", na = "", row.names = FALSE, file = file_name)
 }

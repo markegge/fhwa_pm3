@@ -2,11 +2,13 @@
 % Please edit documentation in R/functions.R
 \name{tmc_list}
 \alias{tmc_list}
-\title{Generate a list of TMCs from a shapefile}
+\title{Generate a list of PM3 TMCs from a shapefile}
 \usage{
-tmc_list(infile, tmcs = "all", outfile = "")
+tmc_list(shp = NULL, infile = "", tmcs = "all", outfile = "")
 }
 \arguments{
+\item{shp}{A sf object with the corresponding shapefile}
+
 \item{infile}{Path to the input shapefile file}
 
 \item{tmcs}{"all" or "interstate" - Filter TMCs}
@@ -20,4 +22,12 @@ Character string TMCs to paste into RITIS
 This function creates a comma separated list of TMCs from a given
 network shapefile. This list of TMCs can be used with the RITIS
 Massive Data Downloader to download the correct set of data for a given year.
+Requires either "shp" or "infile"
+}
+\examples{
+\dontrun{
+shp <- sf::sf_read("shp/Alabama.shp")
+tmc_list(shp, tmcs = "interstate", outfile = "out/interstate_tmcs.txt")
+}
+
 }

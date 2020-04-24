@@ -1,7 +1,7 @@
 library(testthat)
 library(pm3)
 
-test_check("pm3")
+# test_check("pm3")
 
 
 # tttr_test <- score("test_data/Readings.csv", metric = "TTTR", verbose = TRUE)
