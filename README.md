@@ -1,11 +1,11 @@
-# FHWA PM3 NPMRDS Travel Time Reliability Processing Tools
+# NPMRDS Travel Time Reliability Processing Tools
 
 NPMRDS Travel Time data is genearlly too voluminous to be effectively managed or manipulated using "common" desktop tools such as Microsoft Excel or Tableau. This repository provides some scripts and tools written in R for effectively working with voluminous NPMRDS data.
 
 This package: 
 
 * Can be used to generate TMC Code lists to download the correct NPMRDS data for a given year
-* Create LOTTR and TTTR metric scores
+* Create Level of Travel Time Reliability (LOTTR) and Truck Travel Time Reliability (TTTR) metric scores
 * Generate a HPMS Submittal File
 
 ## Installation
@@ -141,13 +141,12 @@ hpms(shp, lottr, tttr)
 
 The PM3 Performance measures are best described in [FHWA's June 1, 2017 PM3 Webinar Presentation](https://www.fhwa.dot.gov/tpm/rule/170601pm3.pdf)
 
-FWHA has also provided both:
+FWHA has also provided two sets of guidance on calculating the LOTTR and TTTR performance metrics:
+
 * [General Guidance and Step-by-Step Metric Calculation Procedures for National Performance Measures for Congestion, Reliability, and Freight, and CMAQ Traffic Congestion](https://www.fhwa.dot.gov/tpm/guidance/hif18040.pdf) 
 * [FHWA Computation Procedure for Travel Time Based and Percent Non-Single Occupancy Vehicle (non-SOV) Travel Performance Measures](https://www.fhwa.dot.gov/tpm/guidance/hif18024.pdf)
 
-To be clear, these are two different 40+ page guides, published by FHWA within a month of each other—one created by a consultant, the other created by FHWA. 
-
-If the two competing FHWA guides contradict themselves, reference the definitive [Federal Register PM3 Final Rule](https://www.federalregister.gov/documents/2018/05/31/2018-11652/national-performance-management-measures-assessing-performance-of-the-national-highway-system).
+You can also reference the definitive [Federal Register PM3 Final Rule](https://www.federalregister.gov/documents/2018/05/31/2018-11652/national-performance-management-measures-assessing-performance-of-the-national-highway-system).
 
 ## TMC Network
 
