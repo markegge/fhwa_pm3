@@ -20,7 +20,8 @@ devtools::install_bitbucket("high-street/pm3")
 
 To calculate LOTTR or TTTR Metric scores:
 
-1. Download the shapefiles for the desired year(s) from (https://npmrds.ritis.org/analytics/shapefiles)[https://npmrds.ritis.org/analytics/shapefiles]
+1. Download the shapefiles for the desired year(s) from [https://npmrds.ritis.org/analytics/shapefiles](https://npmrds.ritis.org/analytics/shapefiles)
+
 2. Generate TMC List with the `tmc_list` function:
 
 ```R

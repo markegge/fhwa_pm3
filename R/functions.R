@@ -19,7 +19,7 @@
 #' 
 #' @export
 tmc_list <- function(shp = NULL, infile = "", tmcs = "all", outfile = "") {
-  if(!is.null(shp) & st_is(shp, "")) {
+  if(!is.null(shp) & "sf" %in% class(shp)) {
     SF <- shp
   } else if (infile != "") {
     SF <- sf::st_read(infile, stringsAsFactors = FALSE)
