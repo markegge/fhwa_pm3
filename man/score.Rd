@@ -4,10 +4,18 @@
 \alias{score}
 \title{Calculate LOTTR or TTTR Metric Score}
 \usage{
-score(input_file, metric = "LOTTR", period = "none", verbose = FALSE)
+score(
+  input_file = NULL,
+  DT = NULL,
+  metric = "LOTTR",
+  period = "none",
+  verbose = FALSE
+)
 }
 \arguments{
 \item{input_file}{Path to file containing travel time readings}
+
+\item{DT}{A data.table of travel time readings (if input_file not supplied)}
 
 \item{metric}{"LOTTR" or "TTTR"}
 
@@ -22,7 +30,9 @@ data for multiple years (discouraged due to annual shapefile updates)}
 A data.table of LOTTR/TTTR scores by TMC
 }
 \description{
-Calculate LOTTR / TTTR given a RITIS NPMRDS export of travel time data
+Calculate LOTTR / TTTR given a RITIS NPMRDS export of travel time data.
+Data can be passed in as the path to the csv containing the travel time
+readings or as a data.table of travel time readings.
 input file must have header and format: 
 tmc_code,measurement_tstamp,travel_time_seconds
  e.g. 

@@ -45,9 +45,50 @@ tmc_list <- function(shp = NULL, infile = "", tmcs = "all", outfile = "") {
 }
 
 
+#' Calculate LOTTR Metric Score
+#'
+#' A convenience wrapper for score(metric = "LOTTR")
+#'
+#' @param input_file Path to file containing travel time readings
+#' @param monthly Calculate scores by month?
+#' @return A data.table of LOTTR scores by TMC
+#' 
+#' @examples
+#' \dontrun{
+#' lottr("data/All_Vehicles/Readings.csv", monthly = TRUE)
+#' }
+#' 
+#' @export
+lottr <- function(input_file, monthly = FALSE) {
+  score(input_file = input_file, metric = "LOTTR",
+        period = ifelse(monthly == TRUE, "monthly", "none"))
+}
+
+#' Calculate TTTR Metric Score
+#'
+#' A convenience wrapper for score(metric = "TTTR")
+#'
+#' @param input_file Path to file containing travel time readings
+#' @param monthly Calculate scores by month?
+#' @return A data.table of TTTR scores by TMC
+#' 
+#' @examples
+#' \dontrun{
+#' tttr("data/All_Vehicles/Readings.csv", monthly = TRUE)
+#' }
+#' 
+#' @export
+tttr <- function(input_file, monthly = FALSE) {
+  score(input_file = input_file, metric = "TTTR",
+        period = ifelse(monthly == TRUE, "monthly", "none"))
+}
+
+
 #' Calculate LOTTR or TTTR Metric Score
 #'
-#' Calculate LOTTR / TTTR given a RITIS NPMRDS export of travel time data
+#' Calculate LOTTR / TTTR given a RITIS NPMRDS export of travel time data.
+#' Data can be passed in as the path to the csv containing the travel time
+#' readings or as a data.table of travel time readings.
 #' input file must have header and format: 
 #' tmc_code,measurement_tstamp,travel_time_seconds
 #'  e.g. 
@@ -56,6 +97,7 @@ tmc_list <- function(shp = NULL, infile = "", tmcs = "all", outfile = "") {
 #'  > 116-04379,2019-01-01 00:15:00,46.69
 #'
 #' @param input_file Path to file containing travel time readings
+#' @param DT A data.table of travel time readings (if input_file not supplied)
 #' @param metric "LOTTR" or "TTTR"
 #' @param period "none", "monthly", or "annual" specifies if the results should be
 #'   aggregated by time period. If "none" scores will be computed by TMC for all
@@ -71,8 +113,17 @@ tmc_list <- function(shp = NULL, infile = "", tmcs = "all", outfile = "") {
 #' }
 #' 
 #' @export
-score <- function(input_file, metric = "LOTTR", period = "none", verbose = FALSE) {
-  DT <- fread(input_file)
+score <- function(input_file = NULL, DT = NULL, metric = "LOTTR", period = "none", verbose = FALSE) {
+  if(!is.null(DT) & is.data.table(DT)) {
+    # so far, so good
+  } else if (!is.null(input_file)) {
+    DT <- fread(input_file)
+  } else {
+    cat("Please provide either a data.table of travel time readings or 
+         path to csv of travel time readings via input_file = 'path/to/readings.csv'.")
+    return()
+  }
+  
   
   stopifnot(colnames(DT) == c("tmc_code", "measurement_tstamp", "travel_time_seconds"))
     

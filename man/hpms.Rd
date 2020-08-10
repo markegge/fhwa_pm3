@@ -23,7 +23,7 @@ Writes the resulting file to out/hpms_year.txt
 }
 \examples{
 \dontrun{
-shp <- st_read("shp/Alabama_2019/Alabama.shp", stringsAsFactors = FALSE)
+shp <- st_read("shp/Wyoming_2019/Wyoming.shp", stringsAsFactors = FALSE)
 lottr <- score("data/All_Vehicles/al_tt_seconds.csv", metric = "LOTTR", verbose = TRUE)
 tttr <- score("data/Trucks/aldot_2019_trucks.csv", metric = "TTTR", verbose = TRUE)
 hpms(shp, lottr, tttr)
