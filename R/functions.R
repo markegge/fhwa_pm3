@@ -7,7 +7,7 @@
 #' 
 #' @param shp A sf object with the corresponding shapefile
 #' @param infile Path to the input shapefile file
-#' @param tmcs "all" or "interstate" - Filter TMCs
+#' @param tmcs "all" or "primary" or "interstate" - Filter TMCs
 #' @param outfile Optional, path to write resulting list to a .txt file
 #' @return Character string TMCs to paste into RITIS
 #' 
@@ -28,6 +28,9 @@ tmc_list <- function(shp = NULL, infile = "", tmcs = "all", outfile = "") {
     return()
   }
   
+  if (tmcs == "primary")
+    SF <- SF[SF$IsPrimary == 1, ]
+
   if (tmcs == "interstate")
     SF <- SF[SF$F_System == 1, ]
   
