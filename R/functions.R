@@ -28,6 +28,9 @@ tmc_list <- function(shp = NULL, infile = "", tmcs = "all", outfile = "") {
     return()
   }
   
+  # Some TMCs have missing attributes. Omit these TMCs
+  SF <- SF[!is.na(SF$F_System), ]
+  
   if (tmcs == "primary")
     SF <- SF[SF$IsPrimary == 1, ]
 
@@ -137,6 +140,11 @@ score <- function(input_file = NULL, DT = NULL, metric = "LOTTR", period = "none
   
   DT[, `:=`(dow = wday(date),
             hod = hour(time))]
+  
+  # check if we have a complete dataset
+  if(uniqueN(DT$date) < 28) {
+    warning("Dataset contains less than 28 days. Is this expected?")
+  }
   
   if(period == "monthly")
     DT[, period := format(date, "%Y-%m")]
