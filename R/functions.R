@@ -131,7 +131,7 @@ score <- function(input_file = NULL, DT = NULL, metric = "LOTTR", period = "none
   }
   
   
-  stopifnot(colnames(DT) == c("tmc_code", "measurement_tstamp", "travel_time_seconds"))
+  stopifnot(all(c("tmc_code", "measurement_tstamp", "travel_time_seconds") %in% colnames(DT))
     
   cat("Read ", nrow(DT), " records. Estimated processing time: ", nrow(DT) / 1E7, " minutes.\n")
   
