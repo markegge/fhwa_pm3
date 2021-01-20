@@ -37,7 +37,7 @@ tmc_list <- function(shp = NULL, infile = "", tmcs = "all", outfile = "") {
   if (tmcs == "interstate")
     SF <- SF[SF$F_System == 1, ]
   
-  tmcs <- paste(SF$Tmc, collapse = ", ")
+  tmcs <- paste(na.omit(SF$Tmc), collapse = ", ")
   
   if (outfile != "") {
     fileConn <- file(outfile)
@@ -131,7 +131,7 @@ score <- function(input_file = NULL, DT = NULL, metric = "LOTTR", period = "none
   }
   
   
-  stopifnot(all(c("tmc_code", "measurement_tstamp", "travel_time_seconds") %in% colnames(DT))
+  stopifnot(all(c("tmc_code", "measurement_tstamp", "travel_time_seconds") %in% colnames(DT)))
     
   cat("Read ", nrow(DT), " records. Estimated processing time: ", nrow(DT) / 1E7, " minutes.\n")
   

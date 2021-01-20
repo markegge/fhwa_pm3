@@ -11,7 +11,7 @@ tmc_list(shp = NULL, infile = "", tmcs = "all", outfile = "")
 
 \item{infile}{Path to the input shapefile file}
 
-\item{tmcs}{"all" or "interstate" - Filter TMCs}
+\item{tmcs}{"all" or "primary" or "interstate" - Filter TMCs}
 
 \item{outfile}{Optional, path to write resulting list to a .txt file}
 }
