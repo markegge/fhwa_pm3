@@ -28,6 +28,8 @@ tmc_list <- function(shp = NULL, infile = "", tmcs = "all", outfile = "") {
     return()
   }
   
+  stopifnot(tmcs %in% c("all", "interstate", "primary"))
+  
   # Some TMCs have missing attributes. Omit these TMCs
   SF <- SF[!is.na(SF$F_System), ]
   
@@ -132,25 +134,25 @@ score <- function(input_file = NULL, DT = NULL, metric = "LOTTR", period = "none
   
   
   stopifnot(all(c("tmc_code", "measurement_tstamp", "travel_time_seconds") %in% colnames(DT)))
-    
-  cat("Read ", nrow(DT), " records. Estimated processing time: ", nrow(DT) / 1E7, " minutes.\n")
+
+  cat("Read ", nrow(DT), " records. Estimated processing time: ", nrow(DT) / 1E8, " minutes.\n")
+
+  if(!("POSIXct" %in% class(DT$measurement_tstamp))) {
+    warning("measurement_tstamp not POSIXct - consider updating to the latest versinon of data.table")
+    DT[, measurement_tstamp := fasttime::fastPOSIXct(measurement_tstamp, tz = "GMT")]  
+  }  
   
-  DT[, `:=`(date = as.IDate(measurement_tstamp, format = "%Y-%m-%d %H:%M:%S"),
-            time = as.ITime(measurement_tstamp, format = "%Y-%m-%d %H:%M:%S"))]
   
-  DT[, `:=`(dow = wday(date),
-            hod = hour(time))]
+  DT[, `:=`(dow = wday(measurement_tstamp),
+            hod = hour(measurement_tstamp))]
   
   # check if we have a complete dataset
-  if(uniqueN(DT$date) < 28) {
-    warning("Dataset contains less than 28 days. Is this expected?")
-  }
   
   if(period == "monthly")
-    DT[, period := format(date, "%Y-%m")]
+    DT[, period := format(measurement_tstamp, "%Y-%m")]
   
   if(period == "annual")
-    DT[, period := year(date)]
+    DT[, period := year(measurement_tstamp)]
   
   if(verbose)
     cat("Assigning NHPP Periods...\n")

@@ -12,8 +12,9 @@ License: Mozilla Public License Version 2.0
 Encoding: UTF-8
 LazyData: true
 Imports:
-	data.table (>= 1.12.8),
-	sf (>= 0.9)
+	data.table (>= 1.13),
+	sf (>= 0.9),
+	fasttime
 RoxygenNote: 7.1.1
 Suggests: 
     testthat

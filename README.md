@@ -6,15 +6,15 @@ This package:
 
 * Can be used to generate TMC Code lists to download the correct NPMRDS data for a given year
 * Create Level of Travel Time Reliability (LOTTR) and Truck Travel Time Reliability (TTTR) metric scores
-* Generate a HPMS Submittal File
+* Generate an HPMS Submittal File
 
 ## Installation
 
 ```r
 library(devtools)
 devtools::install_bitbucket("high-street/pm3")
+library(pm3)
 ```
-
 
 ## Calculating LOTTR and TTTR Metric Scores
 
@@ -24,10 +24,19 @@ To calculate LOTTR or TTTR Metric scores:
 
 2. Generate TMC List with the `tmc_list` function:
 
+### All TMCs in Shapefile
+
+```R
+# Exports comma separated list of all TMCs
+tmc_list(infile = "shp/Utah/Utah.shp", outfile = "out/tmcs.txt")
+```
+
+### Interstate TMCs Only
+
 ```R
 library(pm3)
-# Export list of Interstate TMCs for TTTR calculations
-tmc_list(infile = "shp/Utah/Utah.shp", tmcs = "interstate", outfile = "out/tmcs.txt")
+# Exports comma separated list of Interstate TMCs for TTTR calculations
+tmc_list(infile = "shp/Utah/Utah.shp", tmcs = "interstate", outfile = "out/tmcs_interstate.txt")
 ```
 
 3. Log in to RITIS [https://npmrds.ritis.org/analytics/](https://npmrds.ritis.org/analytics/)
@@ -40,16 +49,38 @@ tmc_list(infile = "shp/Utah/Utah.shp", tmcs = "interstate", outfile = "out/tmcs.
     * "NPMRDS from Inrix (Trucks): Travel Time" for TTTR Measure (uncheck Speed, Historic average speed, Reference speed, and Data Density)
 9. Set averaging to 15 minutes (per PM3 Final Rule)
 10. Download and extract the resulting dataset
-11. Calculate scores using `score_pm3` 
+11. Calculate scores using `score` 
 
 ```R
 # Calculate monthly TTTR metric scores
-tttr_scores <- score_pm3("data/Trucks/Readings.csv", 
-                         metric = "TTTR", 
-                         period = "monthly", 
-                         verbose = TRUE)
+tttr_scores <- score("data/Trucks/Readings.csv", 
+                     metric = "TTTR", 
+                     period = "monthly", 
+                     verbose = TRUE)
 ```
 
+### A Minimal Example
+
+
+```R
+library(data.table)
+library(pm3)
+
+# Read in TMC attributes from RITIS export
+tmcs <- fread("data/TMC_Identification.csv")
+
+# Caclulate segment-level LOTTR scores
+tmc_scores <- score("data/Readings.csv", metric = "LOTTR")
+
+# Merge the tmc_scores table to the tmcs attribute table
+tmcs <- merge(tmcs, tmc_scores, by.x = "tmc", by.y= "tmc_code")
+
+tmcs[, vmt := ifelse(faciltype == 1, 1.0, 0.5) * aadt * miles * nhs_pct * 0.01]
+tmcs[, system := ifelse(f_system == 1, "Interstate", "Non-Interstate NHS")]
+
+# Calculate LOTTR scores
+tmcs[!is.na(vmt), sum(vmt * reliable) / sum(vmt), by = system]
+```
 
 ### A Full Example
 
@@ -77,15 +108,14 @@ tmc_list("shp/Wyoming_2019/Wyoming.shp", tmcs = "interstate", outfile = "out/tmc
 
 #
 #  ** DOWNLOAD AND EXTRACT NPMRDS DATA BASED ON TMC LISTS FROM PREVIOUS STEP **
-#
-# Update paths below appropriately...
+#  ** Update paths below appropriately... **
 #
 
 
 # LOTTR --------------------------------------------------------
-lottr_2017 <- score("data/wy_2017/wy_2017.csv", metric = "LOTTR")
-lottr_2018 <- score("data/wy_2018/wy_2018.csv", metric = "LOTTR")
-lottr_2019 <- score("data/wy_2019/wy_2019.csv", metric = "LOTTR")
+lottr_2017 <- score("data/wy_2017/Readings.csv", metric = "LOTTR")
+lottr_2018 <- score("data/wy_2018/Readings.csv", metric = "LOTTR")
+lottr_2019 <- score("data/wy_2019/Readings.csv", metric = "LOTTR")
 
 lottr_2017 <- merge(st_drop_geometry(shp_2017), lottr_2017, by.x = "Tmc", by.y = "tmc_code")
 lottr_2018 <- merge(st_drop_geometry(shp_2018), lottr_2018, by.x = "Tmc", by.y = "tmc_code")
@@ -96,18 +126,18 @@ setDT(lottr)
 
 lottr[, nhs_miles := Miles * NHS_Pct * 0.01]
 lottr[, vmt := AADT * ifelse(FacilType == 1, 1.0, 0.5) * nhs_miles]
-lottr[, interstate := ifelse(F_System == 1, "Interstate", "Non-Interstate NHS")]
+lottr[, system := ifelse(F_System == 1, "Interstate", "Non-Interstate NHS")]
 
 # LOTTR Score 
-lottr[, 
-      .(pct_reliable = sum(vmt * reliable, na.rm = TRUE) / sum(vmt)),
-      by = .(interstate, year)]
+lottr[vmt >= 0 & !is.na(reliable), 
+      .(pct_reliable = sum(vmt * reliable) / sum(vmt)),
+      by = .(system, year)]
 
 
 # TTTR ----------------------------------------------------------
-tttr_2017 <- score("data/wy_trucks_2018/wy_int_2017.csv", metric = "TTTR")
-tttr_2018 <- score("data/wy_trucks_2018/wy_int_2018.csv", metric = "TTTR")
-tttr_2019 <- score("data/wy_trucks_2019/wy_int_2019.csv", metric = "TTTR")
+tttr_2017 <- score("data/wy_trucks_2018/Readings.csv", metric = "TTTR")
+tttr_2018 <- score("data/wy_trucks_2018/Readings.csv", metric = "TTTR")
+tttr_2019 <- score("data/wy_trucks_2019/Readings.csv", metric = "TTTR")
 
 tttr_2017 <- merge(st_drop_geometry(shp_2017), tttr_2017, by.x = "Tmc", by.y = "tmc_code")
 tttr_2018 <- merge(st_drop_geometry(shp_2018), tttr_2018, by.x = "Tmc", by.y = "tmc_code")
@@ -116,12 +146,10 @@ tttr_2019 <- merge(st_drop_geometry(shp_2019), tttr_2019, by.x = "Tmc", by.y = "
 tttr <- rbindlist(list(tttr_2017, tttr_2018, tttr_2019))
 setDT(tttr)
 
-tttr <- tttr[F_System == 1]
-
 tttr[, nhs_miles := Miles * NHS_Pct * 0.01]
 
 # TTTR Score
-tttr[, .(tttr_index = sum(max_tttr * nhs_miles) / sum(nhs_miles)), by = year]
+tttr[F_System == 1, .(tttr_index = sum(max_tttr * nhs_miles) / sum(nhs_miles)), by = year]
 
 ```
 
