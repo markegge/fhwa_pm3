@@ -262,7 +262,7 @@ hpms <- function(shp, lottr, tttr, year = NA) {
                F_System,
                Urban_Code,
                Facility_Type = FacilType,
-               NHS = ifelse(IsPrimary == "0", -1, NHS),
+               NHS,
                Segment_Length = round(Miles * NHS_Pct * 0.01, 3),
                Directionality = sapply(Direction, function(x) switch(x, N = 1, S = 2, E = 3, W = 4, 5)),
                DIR_AADT = as.integer(AADT * ifelse(FacilType == 1, 1.0, 0.5)),
@@ -270,6 +270,10 @@ hpms <- function(shp, lottr, tttr, year = NA) {
                OCC_FAC = 1.7,
                METRIC_SOURCE = 1,
                Comments = "")]
+  
+  # Set NHS Value appropriately - no zeros allowed by FHWA!
+  DT[IsPrimary == "0", NHS := -1]
+  DT[NHS == 0, NHS := -1]
   
   lottr_merge <- lottr[, .(Travel_Time_Code = tmc_code,
                            LOTTR_AMP = score_weekday_am, 
