@@ -6,7 +6,8 @@ This package:
 
 * Can be used to generate TMC Code lists to download the correct NPMRDS data for a given year
 * Create Level of Travel Time Reliability (LOTTR) and Truck Travel Time Reliability (TTTR) metric scores
-* Generate an HPMS Submittal File
+* Generate an HPMS Submittal File based on the [HPMS Field Manual Supplemental Guidance](https://www.fhwa.dot.gov/tpm/guidance/pm3_hpms.pdf)
+
 
 ## Installation
 
@@ -60,7 +61,6 @@ tttr_scores <- score("data/Trucks/Readings.csv",
 ```
 
 ### A Minimal Example
-
 
 ```R
 library(data.table)
