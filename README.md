@@ -37,7 +37,9 @@ tmc_list(infile = "shp/Utah/Utah.shp", outfile = "out/tmcs.txt")
 ```R
 library(pm3)
 # Exports comma separated list of Interstate TMCs for TTTR calculations
-tmc_list(infile = "shp/Utah/Utah.shp", tmcs = "interstate", outfile = "out/tmcs_interstate.txt")
+tmc_list(infile = "shp/Utah/Utah.shp", 
+         tmcs = "interstate", 
+         outfile = "out/tmcs_interstate.txt")
 ```
 
 3. Log in to RITIS [https://npmrds.ritis.org/analytics/](https://npmrds.ritis.org/analytics/)
@@ -84,7 +86,7 @@ tmcs[!is.na(vmt), sum(vmt * reliable) / sum(vmt), by = system]
 
 ### A Full Example
 
-```
+```R
 library(data.table)
 library(pm3)
 library(sf)
