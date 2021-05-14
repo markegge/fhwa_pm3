@@ -13,7 +13,7 @@ This package:
 
 ```r
 library(devtools)
-devtools::install_bitbucket("high-street/pm3")
+devtools::install_github("markegge/fhwa_pm3")
 library(pm3)
 ```
 
