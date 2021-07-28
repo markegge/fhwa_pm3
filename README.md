@@ -1,10 +1,9 @@
 # NPMRDS Travel Time Reliability Processing Tools
 
-NPMRDS Travel Time data is genearlly too voluminous to be effectively managed or manipulated using "common" desktop tools such as Microsoft Excel or Tableau. This repository provides some scripts and tools written in R for effectively working with voluminous NPMRDS data.
+NPMRDS Travel Time data is genearlly too voluminous to be effectively managed or manipulated using "common" desktop tools such as Microsoft Excel or Tableau. This repository provides some scripts and tools written in R for effectively working with voluminous NPMRDS data, especially for the purposes of calculating the FHWA PM3 System Reliability and Freight Performance TPM Performance Measures.
 
 This package: 
 
-* Can be used to generate TMC Code lists to download the correct NPMRDS data for a given year
 * Create Level of Travel Time Reliability (LOTTR) and Truck Travel Time Reliability (TTTR) metric scores
 * Generate an HPMS Submittal File based on the [HPMS Field Manual Supplemental Guidance](https://www.fhwa.dot.gov/tpm/guidance/pm3_hpms.pdf)
 

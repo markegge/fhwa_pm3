@@ -185,8 +185,12 @@ score <- function(input_file = NULL, DT = NULL, metric = "LOTTR", period = "none
   
   scores <- DT[!is.na(nhpp_period),
                .(Observations = .N,
-                 denominator = quantile(travel_time_seconds, probs = c(0.5)),
-                 numerator = quantile(travel_time_seconds, probs = c(ifelse(metric == "LOTTR", 0.8, 0.95)))),
+                 denominator = quantile(travel_time_seconds, 
+                                        probs = c(0.5), 
+                                        type = 1),
+                 numerator = quantile(travel_time_seconds, 
+                                      probs = c(ifelse(metric == "LOTTR", 0.8, 0.95)),
+                                      type = 1)),
                by = eval(group)]
   
   scores[, score := round(numerator / denominator, 2)]
