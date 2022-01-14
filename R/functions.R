@@ -260,6 +260,10 @@ hpms <- function(shp, lottr, tttr, year = NA) {
   stopifnot(length(state) == 1)
   state_fips <- pm3:::fips_lookup[STATE_NAME == state]$FIPS_Code
   
+  # Set NHS Value appropriately - no zeros allowed by FHWA!
+  df[IsPrimary == "0", NHS := -1]
+  df[NHS == 0, NHS := -1]
+  
   DT <- df[, .(Year_Record = year,
                State_Code = state_fips,
                Travel_Time_Code = Tmc,
@@ -275,9 +279,6 @@ hpms <- function(shp, lottr, tttr, year = NA) {
                METRIC_SOURCE = 1,
                Comments = "")]
   
-  # Set NHS Value appropriately - no zeros allowed by FHWA!
-  DT[IsPrimary == "0", NHS := -1]
-  DT[NHS == 0, NHS := -1]
   
   lottr_merge <- lottr[, .(Travel_Time_Code = tmc_code,
                            LOTTR_AMP = score_weekday_am, 
