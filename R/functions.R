@@ -1,102 +1,8 @@
-#' Generate a list of PM3 TMCs from a shapefile
-#'
-#' This function creates a comma separated list of TMCs from a given
-#' network shapefile. This list of TMCs can be used with the RITIS
-#' Massive Data Downloader to download the correct set of data for a given year.
-#' Requires either "shp" or "infile"
-#' 
-#' @param shp A sf object with the corresponding shapefile
-#' @param infile Path to the input shapefile file
-#' @param tmcs "all" or "primary" or "interstate" - Filter TMCs
-#' @param outfile Optional, path to write resulting list to a .txt file
-#' @return Character string TMCs to paste into RITIS
-#' 
-#' @examples
-#' \dontrun{
-#' shp <- sf::sf_read("shp/Alabama.shp")
-#' tmc_list(shp, tmcs = "interstate", outfile = "out/interstate_tmcs.txt")
-#' }
-#' 
-#' @export
-tmc_list <- function(shp = NULL, infile = "", tmcs = "all", outfile = "") {
-  if(!is.null(shp) & "sf" %in% class(shp)) {
-    SF <- shp
-  } else if (infile != "") {
-    SF <- sf::st_read(infile, stringsAsFactors = FALSE)
-  } else {
-    cat("Please provide either a shapefile or shapefile path as an argument.")
-    return()
-  }
-  
-  stopifnot(tmcs %in% c("all", "interstate", "primary"))
-  
-  # Some TMCs have missing attributes. Omit these TMCs
-  SF <- SF[!is.na(SF$F_System), ]
-  
-  if (tmcs == "primary")
-    SF <- SF[SF$IsPrimary == 1, ]
-
-  if (tmcs == "interstate")
-    SF <- SF[SF$F_System == 1, ]
-  
-  tmcs <- paste(na.omit(SF$Tmc), collapse = ", ")
-  
-  if (outfile != "") {
-    fileConn <- file(outfile)
-    writeLines(tmcs, fileConn)
-    close(fileConn)
-    cat("TMC list written to", outfile)
-  } else {
-    return(tmcs)
-  }
-  
-}
-
-
-#' Calculate LOTTR Metric Score
-#'
-#' A convenience wrapper for score(metric = "LOTTR")
-#'
-#' @param input_file Path to file containing travel time readings
-#' @param monthly Calculate scores by month?
-#' @return A data.table of LOTTR scores by TMC
-#' 
-#' @examples
-#' \dontrun{
-#' lottr("data/All_Vehicles/Readings.csv", monthly = TRUE)
-#' }
-#' 
-#' @export
-lottr <- function(input_file, monthly = FALSE) {
-  score(input_file = input_file, metric = "LOTTR",
-        period = ifelse(monthly == TRUE, "monthly", "none"))
-}
-
-#' Calculate TTTR Metric Score
-#'
-#' A convenience wrapper for score(metric = "TTTR")
-#'
-#' @param input_file Path to file containing travel time readings
-#' @param monthly Calculate scores by month?
-#' @return A data.table of TTTR scores by TMC
-#' 
-#' @examples
-#' \dontrun{
-#' tttr("data/All_Vehicles/Readings.csv", monthly = TRUE)
-#' }
-#' 
-#' @export
-tttr <- function(input_file, monthly = FALSE) {
-  score(input_file = input_file, metric = "TTTR",
-        period = ifelse(monthly == TRUE, "monthly", "none"))
-}
-
-
 #' Calculate LOTTR or TTTR Metric Score
 #'
 #' Calculate LOTTR / TTTR given a RITIS NPMRDS export of travel time data.
-#' Data can be passed in as the path to the csv containing the travel time
-#' readings or as a data.table of travel time readings.
+#' Data is passed in as the path to the csv containing the travel time
+#' readings.
 #' input file must have header and format: 
 #' tmc_code,measurement_tstamp,travel_time_seconds
 #'  e.g. 
@@ -105,54 +11,55 @@ tttr <- function(input_file, monthly = FALSE) {
 #'  > 116-04379,2019-01-01 00:15:00,46.69
 #'
 #' @param input_file Path to file containing travel time readings
-#' @param DT A data.table of travel time readings (if input_file not supplied)
 #' @param metric "LOTTR" or "TTTR"
-#' @param period "none", "monthly", or "annual" specifies if the results should be
-#'   aggregated by time period. If "none" scores will be computed by TMC for all
-#'   data in the input file. "annual" only used if an input readings file contains
-#'   data for multiple years (discouraged due to annual shapefile updates)
+#' @param monthly TRUE or FALSE specifies if the results should be
+#'   aggregated by month. If FALSE scores will be computed by TMC for all
+#'   data in the input file.
 #' @param verbose Provide diagnostic output and return all calculated values
 #' @return A data.table of LOTTR/TTTR scores by TMC
 #' 
 #' @examples
 #' \dontrun{
 #' score("data/All_Vehicles/Readings.csv", metric = "LOTTR")
-#' score("data/Trucks/Readings.csv", metric = "TTTR", period = "monthly")
+#' score("data/Trucks/Readings.csv", metric = "TTTR", monthly = TRUE)
 #' }
 #' 
 #' @export
-score <- function(input_file = NULL, DT = NULL, metric = "LOTTR", period = "none", verbose = FALSE) {
-  if(!is.null(DT) & is.data.table(DT)) {
-    # so far, so good
-  } else if (!is.null(input_file)) {
+score <- function(input_file = NULL, metric = "LOTTR", monthly = FALSE, verbose = FALSE) {
+  if (!is.null(input_file)) {
     DT <- fread(input_file)
   } else {
-    cat("Please provide either a data.table of travel time readings or 
-         path to csv of travel time readings via input_file = 'path/to/readings.csv'.")
+    warning("Please provide a valid path to travel time readings, e.g. input_file = 'path/to/readings.csv'.")
     return()
   }
   
-  
-  stopifnot(all(c("tmc_code", "measurement_tstamp", "travel_time_seconds") %in% colnames(DT)))
+  if(!all(c("tmc_code", "measurement_tstamp", "travel_time_seconds") %in% colnames(DT))) {
+    warning("Invalid readings file format. Please ensure you selected Seconds as your travel time unit.")
+  }
 
   cat("Read ", nrow(DT), " records. Estimated processing time: ", nrow(DT) / 1E8, " minutes.\n")
 
   if(!("POSIXct" %in% class(DT$measurement_tstamp))) {
     warning("measurement_tstamp not POSIXct - consider updating to the latest versinon of data.table")
     DT[, measurement_tstamp := fasttime::fastPOSIXct(measurement_tstamp, tz = "GMT")]  
-  }  
-  
+  }
   
   DT[, `:=`(dow = wday(measurement_tstamp),
             hod = hour(measurement_tstamp))]
   
   # check if we have a complete dataset
   
-  if(period == "monthly")
+  if(monthly == TRUE) {
     DT[, period := format(measurement_tstamp, "%Y-%m")]
-  
-  if(period == "annual")
+  } else {
     DT[, period := year(measurement_tstamp)]
+  }
+  
+  if(uniqueN(year(DT$measurement_tstamp)) > 1) {
+    warning("More than one year detected. Due to annual TMC network changes,
+            please process no more than one year at a time.")
+    return()
+  }
   
   if(verbose)
     cat("Assigning NHPP Periods...\n")
@@ -174,14 +81,7 @@ score <- function(input_file = NULL, DT = NULL, metric = "LOTTR", period = "none
   if(verbose)
     cat("Calculating Scores...\n")
   
-  if(period == "none") {
-    group <- quote(.(tmc_code, nhpp_period))
-  } else if (period == "monthly" | period == "annual") {
-    group <- quote(.(tmc_code, nhpp_period, period))
-  } else {
-    cat("Invalid parameter value for period: ", period, ".")
-    return(FALSE)
-  }
+  group <- quote(.(tmc_code, nhpp_period, period))
   
   scores <- DT[!is.na(nhpp_period),
                .(Observations = .N,
@@ -198,12 +98,8 @@ score <- function(input_file = NULL, DT = NULL, metric = "LOTTR", period = "none
   vv <- "score"
   if(verbose == TRUE)
     vv = c("denominator", "numerator", vv)
-    
-  if(period == "none") {
-    scores <- data.table::dcast(scores, tmc_code ~ nhpp_period, value.var = vv)
-  } else if (period == "monthly" | period == "annual") {
-    scores <- data.table::dcast(scores, tmc_code + period ~ nhpp_period, value.var = vv)
-  }
+
+  scores <- data.table::dcast(scores, tmc_code + period ~ nhpp_period, value.var = vv)
   
   if(metric == "LOTTR") {
     if(verbose == TRUE) {

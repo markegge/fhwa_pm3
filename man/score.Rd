@@ -4,25 +4,16 @@
 \alias{score}
 \title{Calculate LOTTR or TTTR Metric Score}
 \usage{
-score(
-  input_file = NULL,
-  DT = NULL,
-  metric = "LOTTR",
-  period = "none",
-  verbose = FALSE
-)
+score(input_file = NULL, metric = "LOTTR", monthly = FALSE, verbose = FALSE)
 }
 \arguments{
 \item{input_file}{Path to file containing travel time readings}
 
-\item{DT}{A data.table of travel time readings (if input_file not supplied)}
-
 \item{metric}{"LOTTR" or "TTTR"}
 
-\item{period}{"none", "monthly", or "annual" specifies if the results should be
-aggregated by time period. If "none" scores will be computed by TMC for all
-data in the input file. "annual" only used if an input readings file contains
-data for multiple years (discouraged due to annual shapefile updates)}
+\item{monthly}{TRUE or FALSE specifies if the results should be
+aggregated by month. If FALSE scores will be computed by TMC for all
+data in the input file.}
 
 \item{verbose}{Provide diagnostic output and return all calculated values}
 }
@@ -31,8 +22,8 @@ A data.table of LOTTR/TTTR scores by TMC
 }
 \description{
 Calculate LOTTR / TTTR given a RITIS NPMRDS export of travel time data.
-Data can be passed in as the path to the csv containing the travel time
-readings or as a data.table of travel time readings.
+Data is passed in as the path to the csv containing the travel time
+readings.
 input file must have header and format: 
 tmc_code,measurement_tstamp,travel_time_seconds
  e.g. 
@@ -43,7 +34,7 @@ tmc_code,measurement_tstamp,travel_time_seconds
 \examples{
 \dontrun{
 score("data/All_Vehicles/Readings.csv", metric = "LOTTR")
-score("data/Trucks/Readings.csv", metric = "TTTR", period = "monthly")
+score("data/Trucks/Readings.csv", metric = "TTTR", monthly = TRUE)
 }
 
 }
