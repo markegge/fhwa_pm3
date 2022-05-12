@@ -94,3 +94,4 @@ For a method for estimating order-of-magnitude traffic volumes using NPMRDS data
 ## Attribution
 
 Package author: Mark Egge, High Street (egge@highstreetconsulting.com)
+License: Mozilla Public License Version 2.0
