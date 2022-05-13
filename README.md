@@ -42,20 +42,29 @@ To calculate LOTTR or TTTR Metric scores:
 library(data.table)
 library(pm3)
 
-# Read in TMC attributes from RITIS export
-tmcs <- fread("data/TMC_Identification.csv")
+# Read in TMC attributes from RITIS export 
+tmcs <- fread("all_vehicles/TMC_Identification.csv")
 
 # Caclulate segment-level LOTTR scores
-tmc_scores <- score("data/Readings.csv", metric = "LOTTR")
+lottr_scores <- score("all_vehicles/Readings.csv", metric = "LOTTR")
+
+# Calculate segment-level TTTR scores
+tttr_scores <- score("trucks/Readings.csv", metric = "TTTR")
 
 # Merge the tmc_scores table to the tmcs attribute table
-tmcs <- merge(tmcs, tmc_scores, by.x = "tmc", by.y= "tmc_code")
+tmcs <- merge(tmcs, lottr_scores[, .(tmc = tmc_code, max_lottr, reliable)], by = "tmc")
+tmcs <- merge(tmcs, tttr_scores[, .(tmc = tmc_code, max_tttr)], by = "tmc", all.x = TRUE)
 
-tmcs[, vmt := ifelse(faciltype == 1, 1.0, 0.5) * aadt * miles * nhs_pct * 0.01]
+# Calculate TMC attributes used for scoring
+tmcs[, nhs_miles := miles * nhs_pct * 0.01]
+tmcs[, vmt := ifelse(faciltype == 1, 1.0, 0.5) * aadt * nhs_miles]
 tmcs[, system := ifelse(f_system == 1, "Interstate", "Non-Interstate NHS")]
 
-# Calculate LOTTR scores
+# Calculate Interstate / Non-Intercent Percent of Reliable Person Miles
 tmcs[!is.na(vmt), sum(vmt * reliable) / sum(vmt), by = system]
+
+# Calcuate TTTR Index
+tmcs[f_system == 1, .(tttr_index = sum(max_tttr * nhs_miles) / sum(nhs_miles))]
 ```
 
 ## Creating an HPMS Submittal File
