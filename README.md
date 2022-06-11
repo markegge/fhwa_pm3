@@ -18,25 +18,6 @@ devtools::install_github("markegge/fhwa_pm3")
 library(pm3)
 ```
 
-## Calculating LOTTR and TTTR Metric Scores
-
-To calculate LOTTR or TTTR Metric scores:
-
-1. Log in to RITIS [https://npmrds.ritis.org/analytics/](https://npmrds.ritis.org/analytics/)
-2. Go to Massive Data Downloader
-3. Choose the appropriate "TMC segments from" value (e.g. "NPMRDS INRIX 2019")
-4. Choose your region (e.g. Wyoming) click Add
-5. Specify appropriate date range, e.g 01/01/2019 – 12/31/2019
-![Massive Data Downloader Region and Dates](man/mdd_1.png)
-6. Select data sources and measures: 
-    * "NPMRDS form INRIX (Trucks and Passenger Vehicles): Travel Time" for LOTTR Measure (uncheck Speed, Historic average speed, Reference speed, and Data Density)
-    * "NPMRDS from Inrix (Trucks): Travel Time" for TTTR Measure (uncheck Speed, Historic average speed, Reference speed, and Data Density)
-9. Set averaging to 15 minutes (per PM3 Final Rule) and Submit
-![Massive Data Downloader Data Sources and Units](man/mdd_2.png)
-10. Download and extract the resulting dataset
-11. Calculate scores using `score` 
-
-
 ### A Minimal Example
 
 _To run the example below, copy `Readings.csv` and `TMC_Identification.csv` from `tests/testthat` into your working directory._
@@ -45,7 +26,7 @@ _To run the example below, copy `Readings.csv` and `TMC_Identification.csv` from
 library(data.table)
 library(pm3)
 
-# Caclulate segment-level LOTTR and TTTR scores
+# Calculate segment-level LOTTR and TTTR scores
 lottr_scores <- score("Readings.csv", metric = "LOTTR")
 tttr_scores <- score("Readings.csv", metric = "TTTR")
 
@@ -79,6 +60,28 @@ phed(urban_code = 56139,
        speed_limits = fread("speed_limits.csv"))
 #> Peak Hour Excess Delay per Capita for 2020: 0.13 hours
 ```
+
+## Calculating LOTTR and TTTR Metric Scores
+
+To calculate LOTTR or TTTR Metric scores:
+
+1. Log in to RITIS [https://npmrds.ritis.org/analytics/](https://npmrds.ritis.org/analytics/)
+2. Go to Massive Data Downloader
+3. Choose the appropriate "TMC segments from" value (e.g. "NPMRDS INRIX 2019")
+4. Choose your region (e.g. Wyoming) click Add
+5. Specify appropriate date range, e.g 01/01/2019 – 12/31/2019
+![Massive Data Downloader Region and Dates](man/mdd_1.png)
+6. Select data sources and measures: 
+    * "NPMRDS form INRIX (Trucks and Passenger Vehicles): Travel Time" for LOTTR Measure (uncheck Speed, Historic average speed, Reference speed, and Data Density)
+    * "NPMRDS from Inrix (Trucks): Travel Time" for TTTR Measure (uncheck Speed, Historic average speed, Reference speed, and Data Density)
+9. Set averaging to 15 minutes (per PM3 Final Rule) and Submit
+![Massive Data Downloader Data Sources and Units](man/mdd_2.png)
+10. Download and extract the resulting dataset
+11. Calculate scores using `score` 
+
+
+## Calculating PHED Scores
+[To do - write this!]
 
 ## Creating an HPMS Submittal File
 
