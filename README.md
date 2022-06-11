@@ -1,11 +1,12 @@
-# NPMRDS Travel Time Reliability Processing Tools
+# NPMRDS Processing Tools for Assessing System Performance, Freight Movement, and CMAQ Improvement Program
 
-This repository provides some scripts and tools written in R for effectively working with voluminous NPMRDS data for calculating the FHWA PM3 System Reliability and Freight Performance TPM Performance Measures. For use with NPMRDS (2016 – Present) downloaded from https://npmrds.ritis.org/
+This repository provides some scripts and tools written in R for effectively working with voluminous NPMRDS data for calculating the FHWA Transportation Performance Management (TPM) PM3 System Reliability, Freight, and CMAQ Congestion Performance  Performance Measures. For use with NPMRDS (2016 – Present) downloaded from https://npmrds.ritis.org/
 
 Use this package to: 
 
 * Calculate TMC-segment Level of Travel Time Reliability (LOTTR) and Truck Travel Time Reliability (TTTR) metric scores
 * Calculate Interstate / Non-Interstate NHS Percent of Person Miles Reliable and TTTR Index performance measures
+* Calculate Annual Hours of Peak Hour Excessive Delay per Capita performance measure
 * Generate an HPMS Submittal File based on the [HPMS Field Manual Supplemental Guidance](https://www.fhwa.dot.gov/tpm/guidance/pm3_hpms.pdf)
 
 
@@ -38,24 +39,44 @@ To calculate LOTTR or TTTR Metric scores:
 
 ### A Minimal Example
 
+_To run the example below, copy `Readings.csv` and `TMC_Identification.csv` from `tests/testthat` into your working directory._
+
 ```R
 library(data.table)
 library(pm3)
 
-# Read in TMC attributes from RITIS export
-tmcs <- fread("data/TMC_Identification.csv")
+# Caclulate segment-level LOTTR and TTTR scores
+lottr_scores <- score("Readings.csv", metric = "LOTTR")
+tttr_scores <- score("Readings.csv", metric = "TTTR")
 
-# Caclulate segment-level LOTTR scores
-tmc_scores <- score("data/Readings.csv", metric = "LOTTR")
+# Read in TMC attributes from RITIS export and calculate attributes
+tmcs <- fread("TMC_Identification.csv")
+
+tmcs[, nhs_miles := miles * nhs_pct * 0.01]
+tmcs[, vmt := ifelse(faciltype == 1, 1.0, 0.5) * aadt * nhs_miles]
 
 # Merge the tmc_scores table to the tmcs attribute table
-tmcs <- merge(tmcs, tmc_scores, by.x = "tmc", by.y= "tmc_code")
-
-tmcs[, vmt := ifelse(faciltype == 1, 1.0, 0.5) * aadt * miles * nhs_pct * 0.01]
-tmcs[, system := ifelse(f_system == 1, "Interstate", "Non-Interstate NHS")]
+tmcs <- merge(tmcs, lottr_scores, by.x = "tmc", by.y= "tmc_code")
+tmcs <- merge(tmcs, tttr_scores, by.x = "tmc", by.y= "tmc_code")
 
 # Calculate LOTTR scores
-tmcs[!is.na(vmt), sum(vmt * reliable) / sum(vmt), by = system]
+tmcs[!is.na(vmt), .(pct_reliable = sum(vmt * reliable) / sum(vmt)), by = f_system == 1]
+>    f_system pct_reliable
+> 1:     TRUE    1.0000000
+> 2:    FALSE    0.7545984
+
+# Calculate TTTR score
+tmcs[f_system == 1, .(tttr_index = sum(max_tttr * nhs_miles) / sum(nhs_miles))]
+>    tttr_index
+> 1:       1.08
+
+# Calculating Peak Hour Excess Delay
+phed(urban_code = 56139,
+       population = 52898,
+       travel_time_readings = "Readings.csv",
+       tmc_identification = "TMC_Identification.csv",
+       speed_limits = fread("speed_limits.csv"))
+> Peak Hour Excess Delay per Capita for  2020 : 0.13 hours[1] 0.133872
 ```
 
 ## Creating an HPMS Submittal File
@@ -71,6 +92,7 @@ tttr <- score("data/Trucks/Readings.csv", metric = "TTTR", verbose = TRUE)
 hpms(shp, lottr, tttr)
 ```
 
+** Note: the `hpms()` function does not support the ability to join PHED scores at this time. **
 
 ## PM3 Guidance
 
@@ -94,3 +116,7 @@ For a method for estimating order-of-magnitude traffic volumes using NPMRDS data
 ## Attribution
 
 Package author: Mark Egge, High Street (egge@highstreetconsulting.com)
+
+## What's New
+
+June 10, 2022: Added PHED function to calculate PHED given a travel time readings file and speed limits

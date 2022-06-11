@@ -120,10 +120,218 @@ score <- function(input_file = NULL, metric = "LOTTR", monthly = FALSE, verbose 
 }
 
 
+# default factor tables / volume profiles
+# based on FHWA guidance
+
+moy_factor_default <- read.table(header = TRUE, sep = ",", text = "
+      month,freeway,non_freeway
+      1,0.94,0.94
+      2,0.88,0.88
+      3,1.01,1.04
+      4,1.01,1.01
+      5,1.05,1.05
+      6,1.04,1.04
+      7,1.05,1.05
+      8,1.08,1.08
+      9,0.99,0.99
+      10,1.04,1.04
+      11,0.95,0.95
+      12,0.97,0.97")
+
+dow_factor_default <- read.table(header = TRUE, sep = ",", text = "
+      day,freeway,non_freeway
+      1,0.8,0.8
+      2,1.05,1.05
+      3,1.05,1.05
+      4,1.05,1.05
+      5,1.05,1.05
+      6,1.1,1.1
+      7,0.9,0.9")
+
+hod_profile_default <- read.table(header = TRUE, sep = ",", text = "
+      hour,freeway,non_freeway
+      6,0.063,0.046
+      7,0.071,0.064
+      8,0.0615,0.056
+      9,0.0525,0.052
+      15,0.0725,0.0735
+      16,0.0785,0.0795
+      17,0.07,0.07
+      18,0.0555,0.0575
+      19,0.042,0.047")
+
+#' Calculate PHED Metric
+#'
+#' Calculate the CMAQ Traffic Congestion Measure in accordance with
+#' \href{https://www.fhwa.dot.gov/tpm/guidance/hif18040.pdf}{FHWA General Guidance and Step-by-Step Metric Calculation Procedures for National Performance Measures for Congestion, Reliability, and Freight, and CMAQ Traffic Congestion}
+#' Requires the speed limits for all TMC segments. Other parameters are optional
+#' and (with defaults supplied from  FHWA's guidance). Uses the same travel time readings
+#' file as \code{score(..., metric = "LOTTR")}
+#' 
+#' @param urban_code urban code of the urbanized area (look up based on shapefile)
+#' @param population based on most recent (2020) ACS 5-year estimate for Urban Area. See FHWA guidance
+#' @param travel_time_readings path to readings CSV with 15-minute travel time observations for all vehicles exported from RITIS.
+#' @param tmc_identification Path to TMC_Identification.csv file provided by RITIS with travel time download.
+#' @param speed_limits a data.frame-like object with speed limits for all TMCs with format tmc,speed_limit
+#' @param pm_peak 3 or 4. Peak Period is defined as weekdays from 6 am to 10 am and either 3 pm to 7 pm (3) or 4 pm to 8 pm (4)
+#' @param output_file_name optional path and name of .csv file to export with TMC-level PHED exports.
+#' @param avo_cars Average vehicle occupancy for passenger vehicles
+#' @param avo_trucks Average vehicle occupancy for freight trucks
+#' @param avo_buses Average vehicle occupancy for buses
+#' @param moy_factor Month of year adjustment factors for freeways and non-freeway facilities in format \preformatted{month,freeway,non_freeway
+#' 1, 0.99, 0.98
+#' ... 
+#' 12, 1.01, 1.00}
+#' @param dow_factor Day of week adjustment factors. Monday (2) through Friday (6). Format: \preformatted{day,freeway,non_freeway
+#' 2, 1.05, 1.05
+#' ...
+#' 6, 1.1, 1.1}
+#' @param hod_profile Hourly traffic percentages for peak hours. Non-directional. Format: \preformatted{hour,freeway,non_freeway
+#' 6,0.045,0.050
+#' ...
+#' 18,0.052,0.048}
+#' 
+#' @return Annual hours of peak hour excessive delay per capita
+#' 
+#' @examples
+#' \dontrun{
+#' phed(urban_code = 7786, 
+#'      population = 752898, 
+#'      travel_time_readings = "npmrds/all_vehicles_2021/Readings.csv", 
+#'      tmc_identification = "npmrds/all_vehicles_2021/TMC_Identification.csv", 
+#'      speed_limits = fread("birmingham_tmc_speed_limits.csv"), 
+#'      pm_peak = 3, 
+#'      output_file_name = "phed_2021.csv",
+#'      avo_cars = 1.62, avo_trucks = 1.0, avo_buses = 5.1,
+#'      moy_factor = fread("birmingham_moy_factors.csv"), 
+#'      dow_factor = fread("birmingham_dow_factors.csv"), 
+#'      hod_profile = fread("birmingham_hod_profile.csv"))
+#' }
+#' 
+#' @export
+phed <- function(urban_code, population, travel_time_readings, tmc_identification, 
+                 speed_limits, pm_peak = 3, output_file_name = NA,
+                 avo_cars = 1.62, avo_trucks = 1.0, avo_buses = 5.1,
+                 moy_factor = moy_factor_default, 
+                 dow_factor = dow_factor_default, 
+                 hod_profile = hod_profile_default) {
+  
+  if(as.integer(pm_peak) == 3)  {
+    hours <- c(6, 7, 8, 9, 15, 16, 17, 18) # 3 - 7 pm
+  } else if (as.integer(pm_peak) == 4) {
+    hours <- c(6, 7, 8, 9, 16, 17, 18, 19) # 4 - 8 pm
+  } else {
+    warning("Invalid PM peak period. Use '3' for 3 - 7 pm or '4' for 4 - 8 pm")
+  }
+  
+  setDT(moy_factor); setDT(dow_factor); setDT(hod_profile)
+  hod_profile <- hod_profile[hour %in% hours]
+  
+  # set up factor tables for joining later
+  factors <- list("moy" = moy_factor, "dow" = dow_factor, "hod" = hod_profile)
+  for(factor in names(factors)) {
+    factors[[factor]] <- melt(factors[[factor]], 
+                              measure.vars = c("freeway", "non_freeway"), 
+                              variable.name = "road_class", variable.factor = FALSE,
+                              value.name = paste0(factor, "_factor"))
+  }
+  
+  # tmcs ----
+  tmcs <- fread(tmc_identification)
+  
+  # filter to just selected urban area
+  uc <- urban_code # to resolve variable scope issue vs. tmcs$urban_code
+  tmcs <- tmcs[faciltype %in% c(1, 2, 6) & nhs >= 1 & urban_code == uc]
+  
+  tmcs[, road_class := ifelse(f_system == 1, "freeway", "non_freeway")] # for volume factors
+  
+  stopifnot(nrow(tmcs) > 5)
+  
+  #
+  # calculate volume (persons) per 15 mins
+  #
+  
+  # annualized average daily people
+  tmcs[, aadt_cars := aadt - (aadt_singl + aadt_combi)]
+  tmcs[, aadp := avo_cars * aadt_cars + avo_buses * aadt_singl + avo_trucks * aadt_combi]
+  tmcs[, aadp := aadp * nhs_pct * 0.01 * ifelse(faciltype == 1, 1.0, 0.5)]
+  
+  # people per period
+  periods <- expand.grid(month = 1:12, day = 2:6, hour = 0:23, road_class = c("freeway", "non_freeway"))
+  setDT(periods)
+  
+  period_factors <- merge(periods, factors[["moy"]], by = c("road_class", "month"))
+  period_factors <- merge(period_factors, factors[["dow"]], by = c("road_class", "day"))
+  period_factors <- merge(period_factors, factors[["hod"]], by = c("road_class", "hour"))  
+  period_factors[, factor := moy_factor * dow_factor * hod_factor]
+  
+  #
+  # calculate delay ----
+  #
+  
+  # join speed limits
+  stopifnot(c("tmc", "speed_limit") %in% colnames(speed_limits))
+  tmcs <- merge(tmcs, speed_limits[, c("tmc", "speed_limit")], by = "tmc", all.x = TRUE)
+  
+  # calculate threshold travel times
+  tmcs[, threshold_speed := pmax(20, speed_limit * 0.6)]
+  tmcs[, threshold_travel_time := (miles / threshold_speed) * 3600]
+  
+  # read in 15 minute travel time readings
+  travel_time <- fread(travel_time_readings, 
+                       select = c("tmc_code", "measurement_tstamp", "travel_time_seconds"))
+  
+  # filter to peak hours and weekdays only
+  travel_time[, hour := data.table::hour(measurement_tstamp)]
+  travel_time <- travel_time[hour %in% hours]
+  
+  travel_time[, day := data.table::wday(measurement_tstamp)]
+  travel_time <- travel_time[day %in% c(2, 3, 4, 5, 6)]
+  
+  travel_time[, month := data.table::month(measurement_tstamp)]
+  
+  year <- unique(year(travel_time$measurement_tstamp))
+  
+  if(length(year) > 1) {
+    warning("Error: data for more than one year supplied")
+  }
+  
+  setnames(travel_time, "tmc_code", "tmc")
+  
+  # join in threshold travel times with TMC inner join
+  travel_time <- merge(travel_time, tmcs[, .(tmc, road_class, aadp, threshold_travel_time)], by = "tmc")
+  
+  delay <- travel_time[travel_time_seconds > threshold_travel_time]
+  # 900 seconds max delay per FHWA's rule:
+  delay[, delay_seconds := pmin(travel_time_seconds - threshold_travel_time, 900)]
+  
+  # calculate person hours
+  delay <- merge(delay, period_factors, by = c("road_class", "month", "day", "hour"))
+  
+  # multiply by 0.25 because each observation is a quarter of an hour
+  delay[, delay_person_hours := (delay_seconds / 3600) * aadp * factor * 0.25]
+  
+  tmc_delay <- delay[, .(delay = round(sum(delay_person_hours), 3)), by = tmc]
+  
+  # Results ----
+  
+  # PHED per Capita:
+  phed <- tmc_delay[, sum(delay) / population]
+  
+  cat(paste("Peak Hour Excess Delay per Capita for ", year, ":", round(phed, 2), "hours"))
+  
+  if(!is.na(output_file_name)) {
+    fwrite(tmc_delay, output_file_name)
+  }
+  
+  return(phed)
+}
+
+
 #' Generate an HPMS Submission File
 #'
 #' Generate an HPMS submission file in accordance with
-#' https://www.fhwa.dot.gov/tpm/guidance/pm3_hpms.pdf
+#' \href{https://www.fhwa.dot.gov/tpm/guidance/pm3_hpms.pdf}{HPMS Field Manual Supplemental Guidance}
 #' Requires the scores from score() to be run with verbose = TRUE
 #' Writes the resulting file to out/hpms_year.txt
 #' 
@@ -131,6 +339,7 @@ score <- function(input_file = NULL, metric = "LOTTR", monthly = FALSE, verbose 
 #' @param lottr A data.table of LOTTR scores produced using \code{score(..., metric == "LOTTR")}
 #' @param tttr A data.table of TTTR scores produced using \code{score(..., metric == "TTTR")}
 #' @param year Year for which the file is being generated. Defaults to last year
+#' @param phed A data.table of PHED scores produced using \code{phed()}
 #' 
 #' @examples
 #' \dontrun{
@@ -141,7 +350,9 @@ score <- function(input_file = NULL, metric = "LOTTR", monthly = FALSE, verbose 
 #' }
 #' 
 #' @export
-hpms <- function(shp, lottr, tttr, year = NA) {
+hpms <- function(shp, lottr, tttr, phed = NULL, year = NA) {
+  #to do - update to use TMC identification
+  #to do - add PHED
   if(is.na(year))
     year <- year(Sys.Date()) - 1
   

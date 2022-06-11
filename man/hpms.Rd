@@ -4,7 +4,7 @@
 \alias{hpms}
 \title{Generate an HPMS Submission File}
 \usage{
-hpms(shp, lottr, tttr, year = NA)
+hpms(shp, lottr, tttr, phed = NULL, year = NA)
 }
 \arguments{
 \item{shp}{The sf shapefile containing the corresponding shapefile}
@@ -13,11 +13,13 @@ hpms(shp, lottr, tttr, year = NA)
 
 \item{tttr}{A data.table of TTTR scores produced using \code{score(..., metric == "TTTR")}}
 
+\item{phed}{A data.table of PHED scores produced using \code{phed()}}
+
 \item{year}{Year for which the file is being generated. Defaults to last year}
 }
 \description{
 Generate an HPMS submission file in accordance with
-https://www.fhwa.dot.gov/tpm/guidance/pm3_hpms.pdf
+\href{https://www.fhwa.dot.gov/tpm/guidance/pm3_hpms.pdf}{HPMS Field Manual Supplemental Guidance}
 Requires the scores from score() to be run with verbose = TRUE
 Writes the resulting file to out/hpms_year.txt
 }
