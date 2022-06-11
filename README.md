@@ -20,7 +20,7 @@ library(pm3)
 
 ### A Minimal Example
 
-_To run the example below, copy `Readings.csv` and `TMC_Identification.csv` from `tests/testthat` into your working directory._
+_To run the example below, copy `Readings.csv` and `TMC_Identification.csv` and `speed_limits.csv` from `tests/testthat` into your working directory._
 
 ```R
 library(data.table)
