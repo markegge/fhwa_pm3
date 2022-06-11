@@ -54,21 +54,22 @@ tmcs <- fread("TMC_Identification.csv")
 
 tmcs[, nhs_miles := miles * nhs_pct * 0.01]
 tmcs[, vmt := ifelse(faciltype == 1, 1.0, 0.5) * aadt * nhs_miles]
+tmcs[, system := ifelse(f_system == 1, "Interstate", "Non-Interstate NHS")]
 
 # Merge the tmc_scores table to the tmcs attribute table
 tmcs <- merge(tmcs, lottr_scores, by.x = "tmc", by.y= "tmc_code")
-tmcs <- merge(tmcs, tttr_scores, by.x = "tmc", by.y= "tmc_code")
+tmcs <- merge(tmcs, tttr_scores, by.x = "tmc", by.y= "tmc_code", all.x = TRUE)
 
 # Calculate LOTTR scores
-tmcs[!is.na(vmt), .(pct_reliable = sum(vmt * reliable) / sum(vmt)), by = f_system == 1]
->    f_system pct_reliable
-> 1:     TRUE    1.0000000
-> 2:    FALSE    0.7545984
+tmcs[!is.na(vmt), .(pct_reliable = sum(vmt * reliable) / sum(vmt)), by = system]
+#>                system pct_reliable
+#> 1: Non-Interstate NHS    0.7545984
+#> 2:         Interstate    1.0000000
 
 # Calculate TTTR score
 tmcs[f_system == 1, .(tttr_index = sum(max_tttr * nhs_miles) / sum(nhs_miles))]
->    tttr_index
-> 1:       1.08
+#>    tttr_index
+#> 1:       1.08
 
 # Calculating Peak Hour Excess Delay
 phed(urban_code = 56139,
@@ -76,7 +77,7 @@ phed(urban_code = 56139,
        travel_time_readings = "Readings.csv",
        tmc_identification = "TMC_Identification.csv",
        speed_limits = fread("speed_limits.csv"))
-> Peak Hour Excess Delay per Capita for  2020 : 0.13 hours[1] 0.133872
+#> Peak Hour Excess Delay per Capita for 2020: 0.13 hours
 ```
 
 ## Creating an HPMS Submittal File
@@ -117,6 +118,10 @@ For a method for estimating order-of-magnitude traffic volumes using NPMRDS data
 
 Package author: Mark Egge, High Street (egge@highstreetconsulting.com)
 
+<<<<<<< HEAD
 ## What's New
 
 June 10, 2022: Added PHED function to calculate PHED given a travel time readings file and speed limits
+=======
+License: Mozilla Public License Version 2.0
+>>>>>>> f240ec482c97d0198d57f75dbb712d47264636f0
