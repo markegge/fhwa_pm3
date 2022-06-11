@@ -121,10 +121,8 @@ For a method for estimating order-of-magnitude traffic volumes using NPMRDS data
 
 Package author: Mark Egge, High Street (egge@highstreetconsulting.com)
 
-<<<<<<< HEAD
+License: Mozilla Public License Version 2.0
+
 ## What's New
 
 June 10, 2022: Added PHED function to calculate PHED given a travel time readings file and speed limits
-=======
-License: Mozilla Public License Version 2.0
->>>>>>> f240ec482c97d0198d57f75dbb712d47264636f0
