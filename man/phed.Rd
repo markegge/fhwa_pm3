@@ -5,35 +5,30 @@
 \title{Calculate PHED Metric}
 \usage{
 phed(
-  urban_code,
-  population,
   travel_time_readings,
   tmc_identification,
   speed_limits,
+  urban_code,
   pm_peak = 3,
-  output_file_name = NA,
   avo_cars = 1.62,
   avo_trucks = 1,
   avo_buses = 5.1,
   moy_factor = moy_factor_default,
   dow_factor = dow_factor_default,
-  hod_profile = hod_profile_default
+  hod_profile = hod_profile_default,
+  population = NA
 )
 }
 \arguments{
-\item{urban_code}{urban code of the urbanized area (look up based on shapefile)}
-
-\item{population}{based on most recent (2020) ACS 5-year estimate for Urban Area. See FHWA guidance}
-
 \item{travel_time_readings}{path to readings CSV with 15-minute travel time observations for all vehicles exported from RITIS.}
 
 \item{tmc_identification}{Path to TMC_Identification.csv file provided by RITIS with travel time download.}
 
 \item{speed_limits}{a data.frame-like object with speed limits for all TMCs with format tmc,speed_limit}
 
-\item{pm_peak}{3 or 4. Peak Period is defined as weekdays from 6 am to 10 am and either 3 pm to 7 pm (3) or 4 pm to 8 pm (4)}
+\item{urban_code}{urban code of the urbanized area (look up based on shapefile)}
 
-\item{output_file_name}{optional path and name of .csv file to export with TMC-level PHED exports.}
+\item{pm_peak}{3 or 4. Peak Period is defined as weekdays from 6 am to 10 am and either 3 pm to 7 pm (3) or 4 pm to 8 pm (4)}
 
 \item{avo_cars}{Average vehicle occupancy for passenger vehicles}
 
@@ -41,7 +36,7 @@ phed(
 
 \item{avo_buses}{Average vehicle occupancy for buses}
 
-\item{moy_factor}{Month of year adjustment factors for freeways and non-freeway facilities in format \preformatted{month,freeway,non_freeway
+\item{moy_factor}{Month of year traffic adjustment factors for freeways and non-freeway facilities in format \preformatted{month,freeway,non_freeway
 1, 0.99, 0.98
 ... 
 12, 1.01, 1.00}}
@@ -55,6 +50,8 @@ phed(
 6,0.045,0.050
 ...
 18,0.052,0.048}}
+
+\item{population}{Optional population value. If provided, function will print PHED value}
 }
 \value{
 Annual hours of peak hour excessive delay per capita
@@ -68,17 +65,17 @@ file as \code{score(..., metric = "LOTTR")}
 }
 \examples{
 \dontrun{
-phed(urban_code = 7786, 
-     population = 752898, 
-     travel_time_readings = "npmrds/all_vehicles_2021/Readings.csv", 
+phed(travel_time_readings = "npmrds/all_vehicles_2021/Readings.csv",
      tmc_identification = "npmrds/all_vehicles_2021/TMC_Identification.csv", 
      speed_limits = fread("birmingham_tmc_speed_limits.csv"), 
+     urban_code = 7786,
      pm_peak = 3, 
      output_file_name = "phed_2021.csv",
      avo_cars = 1.62, avo_trucks = 1.0, avo_buses = 5.1,
      moy_factor = fread("birmingham_moy_factors.csv"), 
      dow_factor = fread("birmingham_dow_factors.csv"), 
-     hod_profile = fread("birmingham_hod_profile.csv"))
+     hod_profile = fread("birmingham_hod_profile.csv"),
+     population = 752898)
 }
 
 }

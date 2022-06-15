@@ -20,15 +20,16 @@ library(pm3)
 
 ### A Minimal Example
 
-_To run the example below, copy `Readings.csv` and `TMC_Identification.csv` and `speed_limits.csv` from `tests/testthat` into your working directory._
+_To run the example below, copy `Readings.csv` and `TMC_Identification.csv` and `speed_limits.csv` from `tests/testthat` into your working directory. Note, in the example below the same readings file is used for both the LOTTR and TTTR metrics. In the real world, the LOTTR metric should use All Vehicles travel time data, and the TTTR metric should use Trucks travel time data._
 
 ```R
 library(data.table)
 library(pm3)
 
 # Calculate segment-level LOTTR and TTTR scores
-lottr_scores <- score("Readings.csv", metric = "LOTTR")
-tttr_scores <- score("Readings.csv", metric = "TTTR")
+lottr_scores <- lottr("Readings.csv", metric = "LOTTR")
+# Note, using "All Vehicles" readings file instead of Trucks only for demo purposes
+tttr_scores <- tttr("Readings.csv", metric = "TTTR")
 
 # Read in TMC attributes from RITIS export and calculate attributes
 tmcs <- fread("TMC_Identification.csv")
@@ -53,12 +54,19 @@ tmcs[f_system == 1, .(tttr_index = sum(max_tttr * nhs_miles) / sum(nhs_miles))]
 #> 1:       1.08
 
 # Calculating Peak Hour Excess Delay
-phed(urban_code = 56139,
-       population = 52898,
-       travel_time_readings = "Readings.csv",
-       tmc_identification = "TMC_Identification.csv",
-       speed_limits = fread("speed_limits.csv"))
+phed_scores <- phed(travel_time_readings = "Readings.csv",
+                    tmc_identification = "TMC_Identification.csv",
+                    speed_limits = fread("speed_limits.csv"),
+                    urban_code = 56139,
+                    population = 52898)
 #> Peak Hour Excess Delay per Capita for 2020: 0.13 hours
+
+# Generate an HPMS Submittal File
+hpms("TMC_Identification.csv",
+     lottr("Readings.csv", verbose = TRUE),
+     tttr("Readings.csv", verbose = TRUE),
+     phed_scores)
+#> Writing output to hpms_2021.txt
 ```
 
 ## Calculating LOTTR and TTTR Metric Scores
@@ -72,31 +80,118 @@ To calculate LOTTR or TTTR Metric scores:
 5. Specify appropriate date range, e.g 01/01/2019 – 12/31/2019
 ![Massive Data Downloader Region and Dates](man/mdd_1.png)
 6. Select data sources and measures: 
-    * "NPMRDS form INRIX (Trucks and Passenger Vehicles): Travel Time" for LOTTR Measure (uncheck Speed, Historic average speed, Reference speed, and Data Density)
-    * "NPMRDS from Inrix (Trucks): Travel Time" for TTTR Measure (uncheck Speed, Historic average speed, Reference speed, and Data Density)
+    * "NPMRDS form INRIX (Trucks and Passenger Vehicles): Travel Time" for LOTTR Measure (the other fields are optional)
+    * "NPMRDS from Inrix (Trucks): Travel Time" for TTTR Measure
 9. Set averaging to 15 minutes (per PM3 Final Rule) and Submit
 ![Massive Data Downloader Data Sources and Units](man/mdd_2.png)
 10. Download and extract the resulting dataset
-11. Calculate scores using `score` 
-
+11. Calculate scores using `lottr` and `tttr`. Monthly scores may be calculated using `monthly = TRUE` 
 
 ## Calculating PHED Scores
-[To do - write this!]
+
+The package `phed()` function implements the calculation procedures in FHWA's guidance:
+[National Performance Measures for Congestion, Reliability, and Freight, and CMAQ Traffic Congestion (CMAQ PHED Calculation Procedures)](https://www.fhwa.dot.gov/tpm/guidance/hif18040.pdf)
+
+At a minimum, the `phed()` function requires speed limits for all TMC segments. The speed limits should be provided in a data.frame-like object in the following format:
+
+|tmc|speed_limit|
+|---|-----------|
+|000+10001|65|
+|000-10002|65|
+|000+10003|55|
+
+Additionally, an urbanized area code must by provided to filter the travel time observations to only the TMC segments within the matching urban area. (The easiest way to determine the urban area is to open the TMC shapefile and select a segment within the urban area to look up the urban_area field value.)
+
+### Traffic Volume Factors
+
+Additionally, traffic volume factors and profiles are used to traslate AADT values (included in the NPMRDS `TMC_Identification.csv` file from HPMS) to hourly estimated "persons". Default profiles have been built into the function, but users are encouraged to use profiles that are specific the urbanized area. Factors must be provided for both freeway and non_freeway facilities (though these may be the same).
+
+Factors must be provided in the format below:
+
+#### Month of Year Factors
+
+Factors should correspond the mutliplicative factor to make an AADT value specific to the month.
+
+|month|freeway|non_freeway|
+|-----|-------|-----------|
+|1|0.95|0.96|
+|2|0.9|0.92|
+|...|...|...|
+|12|1.01|0.99|
+
+#### Day of Week Factors
+
+Day of week factors must be provided for weekdays using integer values for weekdays for a 7-day week beginning on Sundays (e.g. Monday = 2, Tuesday = 3, Wednesday = 4, Thursday = 5, Friday = 6).
+
+|day|freeway|non_freeway|
+|-----|-------|-----------|
+|2|1.05|1.05|
+|3|1.05|1.05|
+|...|...|...|
+|6|1.10|1.10|
+
+#### Hourly Volume Distribution Profile
+
+The hourly volume profile must be provided for peak hours integer values for hours of the day (e.g. 6:00 am = 6). Note, values for freeway and non_freeway should correspond to the percent of daily traffic occuring during the hour. The profile may be provided for all 24 hours, or for selected peak hours only.
+
+|hour|freeway|non_freeway|
+|-----|-------|-----------|
+|6|0.05|0.05|
+|7|0.08|0.075|
+|...|...|...|
+|19|0.08|0.07|
+
+### Occupancy Factors
+
+Finally, average vehicle occupancy (AVO) factors are provided (AVO Cars = 1.7, AVO Trucks = 1, AVO Buses = 10.7) based on FHWA guidance. Using AVO factors that are specific to your urban area are recommended. These may be obtained using the methods described in: [Average Vehicle Occupancy Factors for Computing Travel Time Reliability Measures and Total Peak Hour Excessive Delay Metrics (April 2018)](https://www.fhwa.dot.gov/tpm/guidance/avo_factors.pdf)
+
+Usage:
+
+```R
+phed(
+  travel_time_readings,
+  tmc_identification,
+  speed_limits,
+  urban_code,
+  pm_peak = 3,
+  avo_cars = 1.7,
+  avo_trucks = 1,
+  avo_buses = 10.7,
+  moy_factor = moy_factor_default,
+  dow_factor = dow_factor_default,
+  hod_profile = hod_profile_default,
+  population = NA
+)
+```
+
+If the population argument is provided, the function will output the calculated PHED per capita measure. The function returns a data.table with PHED per TMC.
 
 ## Creating an HPMS Submittal File
 
 The `hpms()` function outputs a .txt file in the appropriate format for HPMS submission. See the (HPMS Supplemental Guidance for PM3)[https://www.fhwa.dot.gov/tpm/guidance/pm3_hpms.pdf]
 
-Note, the input scores *must* be generated with verbose = TRUE.
+If the optional PHED scores are not provided (not required for all states), the PHED value is set to 0 (in accordance with FHWA guidance).
+
+The input `lottr` and `tttr` scores *must* be generated with verbose = TRUE.
+
+The output is generated for the year corresponding to the TMCs in the TMC Identification file.
+
 
 ```R
-shp <- st_read("shp/Wyoming_2019/Wyoming.shp", stringsAsFactors = FALSE)
-lottr <- score("data/All_Vehicles/Readings.csv", metric = "LOTTR", verbose = TRUE)
-tttr <- score("data/Trucks/Readings.csv", metric = "TTTR", verbose = TRUE)
-hpms(shp, lottr, tttr)
+# Calculating Peak Hour Excess Delay
+speed_limits <- speed_limits = fread("speed_limits.csv")
+phed_scores <- phed("data/all_vehicles/Readings.csv",
+                    "TMC_Identification.csv",
+                    speed_limits,
+                    urban_code = 56139)
+
+# Generate an HPMS Submittal File
+hpms("TMC_Identification.csv",
+     lottr("data/all_vehicles/Readings.csv", verbose = TRUE),
+     tttr("data/trucks/Readings.csv", verbose = TRUE),
+     phed_scores)
 ```
 
-** Note: the `hpms()` function does not support the ability to join PHED scores at this time. **
 
 ## PM3 Guidance
 
@@ -125,4 +220,5 @@ License: Mozilla Public License Version 2.0
 
 ## What's New
 
-June 10, 2022: Added PHED function to calculate PHED given a travel time readings file and speed limits
+* June 15, 2022: Refactored function calls to provide greater consistency between measures. LOTTR and TTTR are now scored using `lottr()` and `tttr()` respectively, rather than `score()`. HPMS function now accepts PHED scores.
+* June 10, 2022: Added PHED function to calculate PHED given a travel time readings file and speed limits

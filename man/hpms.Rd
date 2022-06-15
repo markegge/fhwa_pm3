@@ -4,31 +4,40 @@
 \alias{hpms}
 \title{Generate an HPMS Submission File}
 \usage{
-hpms(shp, lottr, tttr, phed = NULL, year = NA)
+hpms(
+  tmc_identification,
+  lottr_scores,
+  tttr_scores,
+  phed_scores = NULL,
+  occ_fac = 1.7
+)
 }
 \arguments{
-\item{shp}{The sf shapefile containing the corresponding shapefile}
+\item{tmc_identification}{Path to TMC_Identification.csv file provided by RITIS with travel time download}
 
-\item{lottr}{A data.table of LOTTR scores produced using \code{score(..., metric == "LOTTR")}}
+\item{lottr_scores}{A data.table of LOTTR scores produced using \code{score(..., metric == "LOTTR")}}
 
-\item{tttr}{A data.table of TTTR scores produced using \code{score(..., metric == "TTTR")}}
+\item{tttr_scores}{A data.table of TTTR scores produced using \code{score(..., metric == "TTTR")}}
 
-\item{phed}{A data.table of PHED scores produced using \code{phed()}}
+\item{phed_scores}{A data.table of of PHED scores produced using \code{phed()}}
 
-\item{year}{Year for which the file is being generated. Defaults to last year}
+\item{occ_fac}{Occupancy factor. Default = 1.7}
 }
 \description{
 Generate an HPMS submission file in accordance with
 \href{https://www.fhwa.dot.gov/tpm/guidance/pm3_hpms.pdf}{HPMS Field Manual Supplemental Guidance}
 Requires the scores from score() to be run with verbose = TRUE
-Writes the resulting file to out/hpms_year.txt
+The reporting year is based on the TMC_Identification year (e.g. use 2021 TMC network for 2021 reporting in 2022)
+Writes the resulting file to hpms_year.txt
 }
 \examples{
 \dontrun{
-shp <- st_read("shp/Wyoming_2019/Wyoming.shp", stringsAsFactors = FALSE)
-lottr <- score("data/All_Vehicles/al_tt_seconds.csv", metric = "LOTTR", verbose = TRUE)
-tttr <- score("data/Trucks/aldot_2019_trucks.csv", metric = "TTTR", verbose = TRUE)
-hpms(shp, lottr, tttr)
+lottr_scores <- lottr("data/All_Vehicles/al_tt_seconds.csv", verbose = TRUE)
+tttr_scores <- tttr("data/Trucks/aldot_2019_trucks.csv", verbose = TRUE)
+phed_scores <- phed("Readings.csv", "TMC_Identification.csv",
+                    speed_limits = fread("speed_limits.csv"),
+                    urban_code = 56139, pm_peak = 3, population = 52898)
+hpms("TMC_Identification.csv", lottr_scores, tttr_scores, phed_scores)
 }
 
 }

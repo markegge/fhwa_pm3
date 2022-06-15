@@ -2,9 +2,9 @@
 % Please edit documentation in R/functions.R
 \name{score}
 \alias{score}
-\title{Calculate LOTTR or TTTR Metric Score}
+\title{Internal function to Calculate LOTTR or TTTR Metric Score}
 \usage{
-score(input_file = NULL, metric = "LOTTR", monthly = FALSE, verbose = FALSE)
+score(input_file = NULL, metric, monthly = FALSE, verbose = FALSE)
 }
 \arguments{
 \item{input_file}{Path to file containing travel time readings}
@@ -36,5 +36,4 @@ tmc_code,measurement_tstamp,travel_time_seconds
 score("data/All_Vehicles/Readings.csv", metric = "LOTTR")
 score("data/Trucks/Readings.csv", metric = "TTTR", monthly = TRUE)
 }
-
 }
