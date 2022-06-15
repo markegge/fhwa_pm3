@@ -6,7 +6,7 @@
 \title{PM3 Tools: A package for calculating PM3 Travel Time Reliability Scores from NPMRDS Data}
 \description{
 This package will provides functions needed to calculate PM3 System Reliability
-and Freight Federal TPM Performance measures.
+and Freight and CMAQ Congestion Federal TPM Performance measures
 }
 \details{
 Note: if your state has a large amount of data, you may encounter
@@ -17,9 +17,9 @@ https://stackoverflow.com/questions/51295402/r-on-macos-error-vector-memory-exha
 \section{PM3 functions}{
 
 The functions
-\code{tmc_list} generates a list of TMC segments in RITIS format for data downloads
-\code{score} calculates segment-level LOTTR and TTTR metric scores for segments,
-  including (optionally) by month
-\code{hpms} generates an HPMS submission file in pipe delimiated format
+\code{\link{lottr}} calculated LOTTR metric scores for TMC segments
+\code{\link{tttr}} calculates TTTR metric scores for TMC segments
+\code{\link{phed}} calculates PHED metric scores for TMC segments
+\code{\link{hpms}} generates an HPMS submission file in pipe delimited format
 }
 
