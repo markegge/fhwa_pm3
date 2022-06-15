@@ -27,18 +27,18 @@ library(data.table)
 library(pm3)
 
 # Calculate segment-level LOTTR and TTTR scores
+# Using "All Vehicles" readings file only for demo purposes
 lottr_scores <- lottr("Readings.csv", metric = "LOTTR")
-# Note, using "All Vehicles" readings file instead of Trucks only for demo purposes
 tttr_scores <- tttr("Readings.csv", metric = "TTTR")
 
-# Read in TMC attributes from RITIS export and calculate attributes
+# Read in TMC attributes from RITIS export
 tmcs <- fread("TMC_Identification.csv")
 
 tmcs[, nhs_miles := miles * nhs_pct * 0.01]
 tmcs[, vmt := ifelse(faciltype == 1, 1.0, 0.5) * aadt * nhs_miles]
 tmcs[, system := ifelse(f_system == 1, "Interstate", "Non-Interstate NHS")]
 
-# Merge the tmc_scores table to the tmcs attribute table
+# Merge the scoress table to the TMCs attribute table
 tmcs <- merge(tmcs, lottr_scores, by.x = "tmc", by.y= "tmc_code")
 tmcs <- merge(tmcs, tttr_scores, by.x = "tmc", by.y= "tmc_code", all.x = TRUE)
 
@@ -62,9 +62,10 @@ phed_scores <- phed(travel_time_readings = "Readings.csv",
 #> Peak Hour Excess Delay per Capita for 2020: 0.13 hours
 
 # Generate an HPMS Submittal File
+# Requires verbose = TRUE for LOTTR and TTTR scores
 hpms("TMC_Identification.csv",
-     lottr("Readings.csv", verbose = TRUE),
-     tttr("Readings.csv", verbose = TRUE),
+     lottr("Readings.csv", verbose = TRUE), 
+     tttr("Readings.csv", verbose = TRUE), 
      phed_scores)
 #> Writing output to hpms_2021.txt
 ```
