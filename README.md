@@ -93,6 +93,26 @@ To calculate LOTTR or TTTR Metric scores:
 The package `phed()` function implements the calculation procedures in FHWA's guidance:
 [National Performance Measures for Congestion, Reliability, and Freight, and CMAQ Traffic Congestion (CMAQ PHED Calculation Procedures)](https://www.fhwa.dot.gov/tpm/guidance/hif18040.pdf)
 
+Usage:
+
+```R
+phed(
+  travel_time_readings,
+  tmc_identification,
+  speed_limits,
+  urban_code,
+  pm_peak = 3,
+  avo_cars = 1.7,
+  avo_trucks = 1,
+  avo_buses = 10.7,
+  moy_factor = moy_factor_default,
+  dow_factor = dow_factor_default,
+  hod_profile = hod_profile_default,
+  population = NA
+)
+```
+### Speed Limits
+
 At a minimum, the `phed()` function requires speed limits for all TMC segments. The speed limits should be provided in a data.frame-like object in the following format:
 
 |tmc|speed_limit|
@@ -101,7 +121,17 @@ At a minimum, the `phed()` function requires speed limits for all TMC segments. 
 |000-10002|65|
 |000+10003|55|
 
-Additionally, an urbanized area code must by provided to filter the travel time observations to only the TMC segments within the matching urban area. (The easiest way to determine the urban area is to open the TMC shapefile and select a segment within the urban area to look up the urban_area field value.)
+### Urban Code
+
+An urbanized area code must by provided to filter the travel time observations to only the TMC segments within the matching urban area. (The easiest way to determine the urban area is to open the TMC shapefile and select a segment within the urban area to look up the urban_area field value.)
+
+### Peak Hours
+
+Per FHWA's guidance, the morning peak traffic hours occur between 6 am and 10 am. Agencies may choose their afternoon peak period as either 3 – 7 pm or 4 – 8 pm. For 3 – 7 pm, use `phed(..., pm_peak = 3)`. For 4 – 8 pm, use `phed(..., pm_peak = 4)`.
+
+### Occupancy Factors
+
+Average vehicle occupancies may (optionally) be provided to accurately estimate person hours. Default occupancy for cars is 1.7, trucks is 1, and buses = 10.7. Urban-area specific data may be obtained via a local survey or from the NHTS.
 
 ### Traffic Volume Factors
 
@@ -145,25 +175,6 @@ The hourly volume profile must be provided for peak hours integer values for hou
 ### Occupancy Factors
 
 Finally, average vehicle occupancy (AVO) factors are provided (AVO Cars = 1.7, AVO Trucks = 1, AVO Buses = 10.7) based on FHWA guidance. Using AVO factors that are specific to your urban area are recommended. These may be obtained using the methods described in: [Average Vehicle Occupancy Factors for Computing Travel Time Reliability Measures and Total Peak Hour Excessive Delay Metrics (April 2018)](https://www.fhwa.dot.gov/tpm/guidance/avo_factors.pdf)
-
-Usage:
-
-```R
-phed(
-  travel_time_readings,
-  tmc_identification,
-  speed_limits,
-  urban_code,
-  pm_peak = 3,
-  avo_cars = 1.7,
-  avo_trucks = 1,
-  avo_buses = 10.7,
-  moy_factor = moy_factor_default,
-  dow_factor = dow_factor_default,
-  hod_profile = hod_profile_default,
-  population = NA
-)
-```
 
 If the population argument is provided, the function will output the calculated PHED per capita measure. The function returns a data.table with PHED per TMC.
 
