@@ -2,12 +2,11 @@
 
 This repository provides some scripts and tools written in R for effectively working with voluminous NPMRDS data for calculating the FHWA Transportation Performance Management (TPM) PM3 System Reliability, Freight, and CMAQ Congestion Performance  Performance Measures. For use with NPMRDS (2016 – Present) downloaded from https://npmrds.ritis.org/
 
-Use this package to: 
+The package consists of the following:
 
-* Calculate TMC-segment Level of Travel Time Reliability (LOTTR) and Truck Travel Time Reliability (TTTR) metric scores
-* Calculate Interstate / Non-Interstate NHS Percent of Person Miles Reliable and TTTR Index performance measures
-* Calculate Annual Hours of Peak Hour Excessive Delay per Capita performance measure
-* Generate an HPMS Submittal File based on the [HPMS Field Manual Supplemental Guidance](https://www.fhwa.dot.gov/tpm/guidance/pm3_hpms.pdf)
+* The `lottr` and `tttr` functions calculate TMC-segment Level of Travel Time Reliability (LOTTR) and Truck Travel Time Reliability (TTTR) metric scores. These are used to calculate Interstate / Non-Interstate NHS Percent of Person Miles Reliable and TTTR Index performance measures (see example code)
+* The `phed` function calculates the Annual Hours of Peak Hour Excessive Delay per Capita performance measure
+* The `hpms` function generates an HPMS Submittal File based on the [HPMS Field Manual Supplemental Guidance](https://www.fhwa.dot.gov/tpm/guidance/pm3_hpms.pdf)
 
 
 ## Installation
