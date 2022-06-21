@@ -28,8 +28,8 @@ library(pm3)
 
 # Calculate segment-level LOTTR and TTTR scores
 # Using "All Vehicles" readings file only for demo purposes
-lottr_scores <- lottr("Readings.csv", metric = "LOTTR")
-tttr_scores <- tttr("Readings.csv", metric = "TTTR")
+lottr_scores <- lottr("Readings.csv")
+tttr_scores <- tttr("Readings.csv")
 
 # Read in TMC attributes from RITIS export
 tmcs <- fread("TMC_Identification.csv")
