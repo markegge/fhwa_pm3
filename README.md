@@ -131,7 +131,10 @@ Per FHWA's guidance, the morning peak traffic hours occur between 6 am and 10 am
 
 ### Occupancy Factors
 
-Average vehicle occupancies may (optionally) be provided to accurately estimate person hours. Default occupancy for cars is 1.7, trucks is 1, and buses = 10.7. Urban-area specific data may be obtained via a local survey or from the NHTS.
+Average vehicle occupancies are used to estimate person hours for delayed vehicles.
+
+Default average vehicle occupancy (AVO) factors are provided (AVO Cars = 1.7, AVO Trucks = 1, AVO Buses = 10.7) based on FHWA guidance.  Default occupancy for cars is 1.7, trucks is 1, and buses = 10.7. Using AVO factors that are specific to your urban area are recommended. Urban-area specific data may be obtained via a local survey or from the NHTS. More details on obtaining local occupancy factors is provided by FHWA: [Average Vehicle Occupancy Factors for Computing Travel Time Reliability Measures and Total Peak Hour Excessive Delay Metrics (April 2018)](https://www.fhwa.dot.gov/tpm/guidance/avo_factors.pdf)
+
 
 ### Traffic Volume Factors
 
@@ -171,10 +174,6 @@ The hourly volume profile must be provided for peak hours integer values for hou
 |7|0.08|0.075|
 |...|...|...|
 |19|0.08|0.07|
-
-### Occupancy Factors
-
-Finally, average vehicle occupancy (AVO) factors are provided (AVO Cars = 1.7, AVO Trucks = 1, AVO Buses = 10.7) based on FHWA guidance. Using AVO factors that are specific to your urban area are recommended. These may be obtained using the methods described in: [Average Vehicle Occupancy Factors for Computing Travel Time Reliability Measures and Total Peak Hour Excessive Delay Metrics (April 2018)](https://www.fhwa.dot.gov/tpm/guidance/avo_factors.pdf)
 
 If the population argument is provided, the function will output the calculated PHED per capita measure. The function returns a data.table with PHED per TMC.
 
