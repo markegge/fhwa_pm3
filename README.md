@@ -20,7 +20,7 @@ library(pm3)
 
 ### A Minimal Example
 
-_To run the example below, copy `Readings.csv` and `TMC_Identification.csv` and `speed_limits.csv` from `tests/testthat` into your working directory. Note, in the example below the same readings file is used for both the LOTTR and TTTR metrics. In the real world, the LOTTR metric should use All Vehicles travel time data, and the TTTR metric should use Trucks travel time data._
+_To run the example below, create a RITIS NPMRDS export using the instructions below or copy `Readings.csv`, `TMC_Identification.csv` and `speed_limits.csv` from `tests/testthat` into your working directory. Note, the example below uses the same readings file is used for both the LOTTR and TTTR metrics. In the real world, the LOTTR metric should use All Vehicles travel time data, and the TTTR metric should use Trucks travel time data._
 
 ```R
 library(data.table)
