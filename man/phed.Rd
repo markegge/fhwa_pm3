@@ -8,7 +8,7 @@ phed(
   travel_time_readings,
   tmc_identification,
   speed_limits,
-  urban_code,
+  urban_code = NA,
   pm_peak = 3,
   avo_cars = 1.7,
   avo_trucks = 1,
@@ -26,7 +26,7 @@ phed(
 
 \item{speed_limits}{a data.frame-like object with speed limits for all TMCs with format tmc,speed_limit}
 
-\item{urban_code}{urban code of the urbanized area (look up based on shapefile)}
+\item{urban_code}{optional vector of one (or more) urban_code values. if specified, filters TMCs to the relevant urban_code}
 
 \item{pm_peak}{3 or 4. Peak Period is defined as weekdays from 6 am to 10 am and either 3 pm to 7 pm (3) or 4 pm to 8 pm (4)}
 
@@ -61,7 +61,7 @@ Calculate the CMAQ Traffic Congestion Measure in accordance with
 \href{https://www.fhwa.dot.gov/tpm/guidance/hif18040.pdf}{FHWA General Guidance and Step-by-Step Metric Calculation Procedures for National Performance Measures for Congestion, Reliability, and Freight, and CMAQ Traffic Congestion}
 Requires the speed limits for all TMC segments. Other parameters are optional
 and (with defaults supplied from  FHWA's guidance). Uses the same travel time readings
-file as \code{score(..., metric = "LOTTR")}
+file as \code{score(..., metric = "LOTTR")}. Outputs annual hours of delay.
 }
 \examples{
 \dontrun{

@@ -220,12 +220,12 @@ hod_profile_default <- read.table(header = TRUE, sep = ",", text = "
 #' \href{https://www.fhwa.dot.gov/tpm/guidance/hif18040.pdf}{FHWA General Guidance and Step-by-Step Metric Calculation Procedures for National Performance Measures for Congestion, Reliability, and Freight, and CMAQ Traffic Congestion}
 #' Requires the speed limits for all TMC segments. Other parameters are optional
 #' and (with defaults supplied from  FHWA's guidance). Uses the same travel time readings
-#' file as \code{score(..., metric = "LOTTR")}
+#' file as \code{score(..., metric = "LOTTR")}. Outputs annual hours of delay.
 #' 
 #' @param travel_time_readings path to readings CSV with 15-minute travel time observations for all vehicles exported from RITIS.
 #' @param tmc_identification Path to TMC_Identification.csv file provided by RITIS with travel time download.
 #' @param speed_limits a data.frame-like object with speed limits for all TMCs with format tmc,speed_limit
-#' @param urban_code urban code of the urbanized area (look up based on shapefile)
+#' @param urban_code optional vector of one (or more) urban_code values. if specified, filters TMCs to the relevant urban_code
 #' @param pm_peak 3 or 4. Peak Period is defined as weekdays from 6 am to 10 am and either 3 pm to 7 pm (3) or 4 pm to 8 pm (4)
 #' @param avo_cars Average vehicle occupancy for passenger vehicles
 #' @param avo_trucks Average vehicle occupancy for freight trucks
@@ -263,7 +263,7 @@ hod_profile_default <- read.table(header = TRUE, sep = ",", text = "
 #' 
 #' @export
 phed <- function(travel_time_readings, tmc_identification, 
-                 speed_limits, urban_code, pm_peak = 3,
+                 speed_limits, urban_code = NA, pm_peak = 3,
                  avo_cars = 1.7, avo_trucks = 1.0, avo_buses = 10.7,
                  moy_factor = moy_factor_default, 
                  dow_factor = dow_factor_default,
@@ -315,8 +315,12 @@ phed <- function(travel_time_readings, tmc_identification,
   tmcs <- fread(tmc_identification)
   
   # filter to just selected urban area
-  uc <- urban_code # to resolve variable scope issue vs. tmcs$urban_code
-  tmcs <- tmcs[faciltype %in% c(1, 2, 6) & nhs >= 1 & urban_code == uc]
+  if(!is.na(urban_code)) {
+    uc <- urban_code # to resolve variable scope issue vs. tmcs$urban_code
+    tmcs <- tmcs[urban_code %in% uc]
+  }
+
+  tmcs <- tmcs[faciltype %in% c(1, 2, 6) & nhs >= 1]
   
   tmcs[, road_class := ifelse(f_system == 1, "freeway", "non_freeway")] # for volume factors
   
