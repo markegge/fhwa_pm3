@@ -5,7 +5,7 @@ test_that("null file_path throws error", {
 
 test_that("tttr runs correctly", {
   expect_equal({
-    tttr_scores <- tttr("Readings.csv")
+    tttr_scores <- tttr(test_path("testdata", "Readings.csv"))
     mean(tttr_scores$max_tttr)
   }, 
   1.638

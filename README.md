@@ -80,12 +80,12 @@ To calculate LOTTR or TTTR Metric scores:
 3. Choose the appropriate "TMC segments from" value (e.g. "NPMRDS INRIX 2019")
 4. Choose your region (e.g. Wyoming) click Add
 5. Specify appropriate date range, e.g 01/01/2019 – 12/31/2019
-![Massive Data Downloader Region and Dates](man/mdd_1.png)
+![Massive Data Downloader Region and Dates](man/figures/mdd_1.png)
 6. Select data sources and measures: 
     * "NPMRDS form INRIX (Trucks and Passenger Vehicles): Travel Time" for LOTTR Measure (the other fields are optional)
     * "NPMRDS from Inrix (Trucks): Travel Time" for TTTR Measure
 9. Set averaging to 15 minutes (per PM3 Final Rule) and Submit
-![Massive Data Downloader Data Sources and Units](man/mdd_2.png)
+![Massive Data Downloader Data Sources and Units](man/figures/mdd_2.png)
 10. Download and extract the resulting dataset
 11. Calculate scores using `lottr` and `tttr`. Monthly scores may be calculated using `monthly = TRUE` 
 

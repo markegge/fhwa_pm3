@@ -16,7 +16,6 @@
 #' \code{\link{hpms}} generates an HPMS submission file in pipe delimited format
 #' 
 #'
-#' @docType package
 #' @name tpm
 #' 
 #' @import data.table

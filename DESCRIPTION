@@ -1,18 +1,18 @@
 Package: tpm
 Title: FHWA TPM Score Calculation Functions
-Version: 1.2.0
+Version: 2.0.1
 Authors@R: 
     person(given = "Mark",
            family = "Egge",
            role = c("aut", "cre"),
-           email = "egge@highstreetconsulting.com",
-           comment = c(ORCID = "YOUR-ORCID-ID"))
-Description: Contains functions for calculating TPM PM3 Level of Travel Time Reliability and Truck Travel Time Reliability metric scores from NPMRDS travel time data and for calculating statewide reliability performance measures.
+           email = "mark@eateggs.com",
+           comment = c(ORCID = "0009-0007-9128-2099"))
+Description: Contains functions for calculating the Federal Highway Administration (FHWA) Transportation Performance Management (TPM) performance measures. Currently, the package provides methods for the System Reliablity and Freight (PM3) performance measures calculated from travel time data provided by The National Performance Management Research Data Set (NPMRDS), including Level of Travel Time Reliability (LOTTR), Truck Travel Time Reliability (TTTR), and Peak Hour Excessive Delay (PHED) metric scores for calculating statewide reliability performance measures.
 License: Mozilla Public License Version 2.0
 Encoding: UTF-8
 URL: https://github.com/markegge/fhwa_pm3/
 BugReports: https://github.com/markegge/fhwa_pm3/issues
-LazyData: false
+LazyData: true
 Depends:
     R (>= 3.5.0)
 Imports:

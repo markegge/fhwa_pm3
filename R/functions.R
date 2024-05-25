@@ -1,3 +1,5 @@
+utils::globalVariables(".")
+utils::globalVariables(c("errorMessage")) 
 #' Calculate LOTTR Metric Score
 #'
 #' Calculate LOTTR given a RITIS NPMRDS export of travel time data.
@@ -19,6 +21,10 @@
 #' 
 #' @export
 lottr <- function(travel_time_readings = NULL, monthly = FALSE, verbose = FALSE) {
+  # bind variables to an object to suppress R CMD check warnings
+  max_lottr <- score_weekday_am <- score_weekday_mid <- score_weekday_pm <- score_weekend <- NULL
+  weekday_am <- weekday_mid <- weekday_pm <- weekend <- reliable <- NULL
+  
   scores <- score(travel_time_readings, metric = "LOTTR", monthly, verbose)
 
   if(verbose == TRUE) {
@@ -53,6 +59,10 @@ lottr <- function(travel_time_readings = NULL, monthly = FALSE, verbose = FALSE)
 #' 
 #' @export
 tttr <- function(travel_time_readings = NULL, monthly = FALSE, verbose = FALSE) {
+  # bind variables to an object to suppress R CMD check warnings
+  max_tttr <- score_weekday_am <- score_weekday_mid <- score_weekday_pm <- score_overnight <- score_weekend <- NULL
+  weekday_am <- weekday_mid <- weekday_pm <- weekend <- overnight <- NULL  
+  
   scores <- score(travel_time_readings, metric = "TTTR", monthly, verbose)
   
   if(verbose == TRUE) {
@@ -92,6 +102,10 @@ tttr <- function(travel_time_readings = NULL, monthly = FALSE, verbose = FALSE) 
 #' }
 
 score <- function(input_file = NULL, metric, monthly = FALSE, verbose = FALSE) {
+  # bind variables to an object to suppress R CMD check warnings
+  measurement_tstamp <- period <- dow <- nhpp_period <- hod <- travel_time_seconds <- NULL
+  numerator <- denominator <- NULL
+  
   if (!is.null(input_file)) {
     DT <- fread(input_file)
   } else {
@@ -269,6 +283,11 @@ phed <- function(travel_time_readings, tmc_identification,
                  dow_factor = dow_factor_default,
                  hod_profile = hod_profile_default,
                  population = NA) {
+  # bind variables to an object to suppress R CMD check warnings
+  day <- faciltype <- nhs <- road_class <- f_system <- aadt_cars <- aadt <- NULL
+  aadt_singl <- aadt_combi <- aadp <- nhs_pct <- hod_factor <- speed_limit <- NULL
+  threshold_speed <- threshold_travel_time <- miles <- measurement_tstamp <- NULL
+  tmc <- delay_seconds <- travel_time_seconds <- delay_person_hours <- delay <- NULL
   
   if(as.integer(pm_peak) == 3)  {
     hours <- c(6, 7, 8, 9, 15, 16, 17, 18) # 3 - 7 pm
@@ -380,6 +399,11 @@ phed <- function(travel_time_readings, tmc_identification,
   }
   
   setnames(travel_time, "tmc_code", "tmc")
+
+  missing_tmcs <- tmcs$tmc[!tmcs$tmc %in% travel_time$tmc]
+  if(length(missing_tmcs) > 0) {
+    warning(paste("Warning: travel time data missing for ", missing_tmcs, collapse = ","))
+  }
   
   # join in threshold travel times with TMCs
   travel_time <- merge(travel_time, tmcs[, .(tmc, road_class, aadp, threshold_travel_time)], by = "tmc")
@@ -437,6 +461,15 @@ phed <- function(travel_time_readings, tmc_identification,
 #' 
 #' @export
 hpms <- function(tmc_identification, lottr_scores, tttr_scores, phed_scores = NULL, occ_fac = 1.7) {
+  # bind variables to an object to suppress R CMD check warnings
+  Postal_Code <- isprimary <- nhs <- tmc <- f_system <- urban_code <- NULL
+  faciltype <- miles <- nhs_pct <- direction <- aadt <- delay <- PHED <- NULL
+  tmc_code <- score_weekday_am <- denominator_weekday_am <- numerator_weekday_am <- NULL
+  score_weekday_mid <- denominator_weekday_mid <- numerator_weekday_mid <- NULL
+  score_weekday_pm <- denominator_weekday_pm <- numerator_weekday_pm <- NULL
+  score_weekend <- denominator_weekend <- numerator_weekend <- NULL
+  score_overnight <- denominator_overnight <- numerator_overnight <- NULL
+  
   DT <- fread(tmc_identification)
 
   yr <- first(year(DT$active_start_date))
@@ -448,7 +481,7 @@ hpms <- function(tmc_identification, lottr_scores, tttr_scores, phed_scores = NU
   
   state <- unique(toupper(DT$state))
   stopifnot(length(state) == 1)
-  state_fips <- tpm:::fips_lookup[Postal_Code == state]$FIPS_Code
+  state_fips <- tpm::fips_lookup[Postal_Code == state]$FIPS_Code
   
   # Set NHS Value appropriately - no zeros allowed by FHWA!
   DT[isprimary == "0", nhs := -1]

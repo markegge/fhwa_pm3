@@ -2,4 +2,5 @@
 .Rhistory
 .RData
 .Ruserdata
+tpm.Rcheck/
 test_data/*

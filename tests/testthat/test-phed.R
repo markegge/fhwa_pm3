@@ -14,9 +14,9 @@ test_that("phed runs correctly", {
       9,0.99,0.99
       12,0.97,0.97")
   
-  expect_warning(phed(travel_time_readings = "Readings.csv",
-                      tmc_identification = "TMC_Identification.csv",
-                      speed_limits = fread("speed_limits.csv"),
+  expect_warning(phed(travel_time_readings = test_path("testdata", "Readings.csv"),
+                      tmc_identification = test_path("testdata", "TMC_Identification.csv"),
+                      speed_limits = fread(test_path("testdata", "speed_limits.csv")),
                       urban_code = 56139,
                       population = 52898,
                       moy_factor = moy_factor_test))
@@ -30,9 +30,9 @@ test_that("phed runs correctly", {
       4,1.05,1.05
       5,1.1,1.1")
   
-  expect_warning(phed(travel_time_readings = "Readings.csv",
-                      tmc_identification = "TMC_Identification.csv",
-                      speed_limits = fread("speed_limits.csv"),
+  expect_warning(phed(travel_time_readings = test_path("testdata", "Readings.csv"),
+                      tmc_identification = test_path("testdata", "TMC_Identification.csv"),
+                      speed_limits = fread(test_path("testdata", "speed_limits.csv")),
                       urban_code = 56139,
                       population = 52898,
                       dow_factor = dow_factor_test))
@@ -46,9 +46,9 @@ test_that("phed runs correctly", {
       5,0.05,0.05
       6,0.1,0.1")
   
-  expect_warning(phed(travel_time_readings = "Readings.csv",
-                      tmc_identification = "TMC_Identification.csv",
-                      speed_limits = fread("speed_limits.csv"),
+  expect_warning(phed(travel_time_readings = test_path("testdata", "Readings.csv"),
+                      tmc_identification = test_path("testdata", "TMC_Identification.csv"),
+                      speed_limits = fread(test_path("testdata", "speed_limits.csv")),
                       urban_code = 56139,
                       population = 52898,
                       dow_factor = dow_factor_test))
@@ -66,9 +66,9 @@ test_that("phed runs correctly", {
       18,0.0555,0.0575
       19,0.042,0.047")
   
-  expect_warning(phed(travel_time_readings = "Readings.csv",
-                      tmc_identification = "TMC_Identification.csv",
-                      speed_limits = fread("speed_limits.csv"),
+  expect_warning(phed(travel_time_readings = test_path("testdata", "Readings.csv"),
+                      tmc_identification = test_path("testdata", "TMC_Identification.csv"),
+                      speed_limits = fread(test_path("testdata", "speed_limits.csv")),
                       urban_code = 56139,
                       population = 52898,
                       hod_profile = hod_profile_test))
@@ -76,10 +76,11 @@ test_that("phed runs correctly", {
   expect_equal({
     phed_scores <- phed(urban_code = 56139,
        population = 52898,
-       travel_time_readings = "Readings.csv",
-       tmc_identification = "TMC_Identification.csv",
-       speed_limits = fread("speed_limits.csv"))
-    round(phed_scores[, sum(delay) / 52898], 2)
+       travel_time_readings = test_path("testdata", "Readings.csv"),
+       tmc_identification = test_path("testdata", "TMC_Identification.csv"),
+       speed_limits = fread(test_path("testdata", "speed_limits.csv"))
+       )
+    round(phed_scores[, sum(delay, na.rm = TRUE) / 52898], 2)
     }, 
        0.18,
        tolerance = 1
