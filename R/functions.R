@@ -324,7 +324,7 @@ phed <- function(travel_time_readings, tmc_identification,
   
   tmcs[, road_class := ifelse(f_system == 1, "freeway", "non_freeway")] # for volume factors
   
-  stopifnot(nrow(tmcs) > 5)
+  stopifnot(nrow(tmcs) > 1)
   
   #
   # calculate volume (persons) per 15 mins
@@ -352,6 +352,10 @@ phed <- function(travel_time_readings, tmc_identification,
   stopifnot(c("tmc", "speed_limit") %in% colnames(speed_limits))
   tmcs <- merge(tmcs, speed_limits[, c("tmc", "speed_limit")], by = "tmc", all.x = TRUE)
   
+  if(any(is.na(tmcs$speed_limit))) {
+    warning(paste("Speed limits missing for ", tmcs[is.na(speed_limit)]$tmc))
+  }
+  
   # calculate threshold travel times
   tmcs[, threshold_speed := pmax(20, speed_limit * 0.6)]
   tmcs[, threshold_travel_time := (miles / threshold_speed) * 3600]
@@ -377,23 +381,24 @@ phed <- function(travel_time_readings, tmc_identification,
   
   setnames(travel_time, "tmc_code", "tmc")
   
-  # join in threshold travel times with TMC inner join
+  # join in threshold travel times with TMCs
   travel_time <- merge(travel_time, tmcs[, .(tmc, road_class, aadp, threshold_travel_time)], by = "tmc")
   
-  delay <- travel_time[travel_time_seconds > threshold_travel_time]
-  
-  # 900 seconds max delay per FHWA's rule:
-  delay[, delay_seconds := pmin(travel_time_seconds - threshold_travel_time, 900)]
+  # 0 seconds min, 900 seconds max delay per FHWA's rule:
+  travel_time[, delay_seconds := pmax(0, pmin(travel_time_seconds - threshold_travel_time, 900))]
   
   # calculate person hours
-  delay <- merge(delay, period_factors, by = c("road_class", "month", "day", "hour"))
+  travel_time <- merge(travel_time, period_factors, by = c("road_class", "month", "day", "hour"))
   
   # multiply by 0.25 because each observation is a quarter of an hour
-  delay[, delay_person_hours := (delay_seconds / 3600) * aadp * factor * 0.25]
+  travel_time[, delay_person_hours := (delay_seconds / 3600) * aadp * factor * 0.25]
   
-  tmc_delay <- delay[, .(delay = round(sum(delay_person_hours), 3)), by = tmc]
+  tmc_delay <- travel_time[, .(delay = round(sum(delay_person_hours), 3)), by = tmc]
   
-  rm(travel_time); rm(delay) # R doesn't seem to garbage collect
+  # join TMC back to TMCs to capture any TMCs without travel time info
+  tmc_delay <- merge(tmcs, tmc_delay, by = "tmc", all.x = TRUE)
+  
+  rm(travel_time); # R doesn't seem to garbage collect
   # Results ----
   
   # PHED per Capita:
@@ -443,7 +448,7 @@ hpms <- function(tmc_identification, lottr_scores, tttr_scores, phed_scores = NU
   
   state <- unique(toupper(DT$state))
   stopifnot(length(state) == 1)
-  state_fips <- pm3:::fips_lookup[Postal_Code == state]$FIPS_Code
+  state_fips <- tpm:::fips_lookup[Postal_Code == state]$FIPS_Code
   
   # Set NHS Value appropriately - no zeros allowed by FHWA!
   DT[isprimary == "0", nhs := -1]

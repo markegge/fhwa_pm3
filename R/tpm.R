@@ -1,4 +1,4 @@
-#' PM3 Tools: A package for calculating PM3 Travel Time Reliability Scores from NPMRDS Data
+#' TPM Tools: A package for calculating TPM PM3 Travel Time Reliability Scores from NPMRDS Data
 #'
 #' This package will provides functions needed to calculate PM3 System Reliability
 #' and Freight and CMAQ Congestion Federal TPM Performance measures 
@@ -17,7 +17,7 @@
 #' 
 #'
 #' @docType package
-#' @name pm3
+#' @name tpm
 #' 
 #' @import data.table
 #' @importFrom stats quantile time

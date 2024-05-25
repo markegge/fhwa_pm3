@@ -1,4 +1,4 @@
 library(testthat)
-library(pm3)
+library(tpm)
 
-test_check("pm3")
+test_check("tpm")

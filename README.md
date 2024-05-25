@@ -1,4 +1,6 @@
-# NPMRDS Processing Tools for Assessing System Performance, Freight Movement, and CMAQ Improvement Program
+# Federal Transportation Performance Management Data Processing Tools
+
+### This package provides NPMRDS Processing Tools for Assessing System Performance, Freight Movement, and CMAQ Improvement Program
 
 This repository provides some scripts and tools written in R for effectively working with voluminous NPMRDS data for calculating the FHWA Transportation Performance Management (TPM) PM3 System Reliability, Freight, and CMAQ Congestion Performance  Performance Measures. For use with NPMRDS (2016 – Present) downloaded from https://npmrds.ritis.org/
 
@@ -14,7 +16,7 @@ The package consists of the following:
 ```r
 library(devtools)
 devtools::install_github("markegge/fhwa_pm3")
-library(pm3)
+library(tpm)
 ```
 
 ### A Minimal Example
@@ -23,7 +25,7 @@ _To run the example below, create a RITIS NPMRDS export using the instructions b
 
 ```R
 library(data.table)
-library(pm3)
+library(tpm)
 
 # Calculate segment-level LOTTR and TTTR scores
 # Using "All Vehicles" readings file only for demo purposes
@@ -230,5 +232,6 @@ License: Mozilla Public License Version 2.0
 
 ## What's New
 
+* May 2024: Renamed package from "pm3" to "tpm." Updated for compatibility with R 4.4+
 * June 15, 2022: Refactored function calls to provide greater consistency between measures. LOTTR and TTTR are now scored using `lottr()` and `tttr()` respectively, rather than `score()`. HPMS function now accepts PHED scores.
 * June 10, 2022: Added PHED function to calculate PHED given a travel time readings file and speed limits
