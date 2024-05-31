@@ -31,9 +31,3 @@ tmc_code,measurement_tstamp,travel_time_seconds
  > 116-04379,2019-01-01 00:00:00,44.78
  > 116-04379,2019-01-01 00:15:00,46.69
 }
-\examples{
-\dontrun{
-score("data/All_Vehicles/Readings.csv", metric = "LOTTR")
-score("data/Trucks/Readings.csv", metric = "TTTR", monthly = TRUE)
-}
-}

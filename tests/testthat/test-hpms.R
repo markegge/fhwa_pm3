@@ -7,9 +7,9 @@ test_that("hpms runs correctly", {
                           speed_limits = fread(test_path("testdata", "speed_limits.csv")),
                           urban_code = 56139,
                           population = 50000)
-      hpms(test_path("testdata", "TMC_Identification.csv"), lottr_scores, tttr_scores, phed_scores)
+      hpms(paste0(tempdir(), "/hpms_test.txt"), test_path("testdata", "TMC_Identification.csv"), lottr_scores, tttr_scores, phed_scores)
     },
-    TRUE
+    NULL
   )
   
 })

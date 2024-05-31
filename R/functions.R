@@ -94,12 +94,6 @@ tttr <- function(travel_time_readings = NULL, monthly = FALSE, verbose = FALSE) 
 #'   data in the input file.
 #' @param verbose Provide diagnostic output and return all calculated values
 #' @return A data.table of LOTTR/TTTR scores by TMC
-#' 
-#' @examples
-#' \dontrun{
-#' score("data/All_Vehicles/Readings.csv", metric = "LOTTR")
-#' score("data/Trucks/Readings.csv", metric = "TTTR", monthly = TRUE)
-#' }
 
 score <- function(input_file = NULL, metric, monthly = FALSE, verbose = FALSE) {
   # bind variables to an object to suppress R CMD check warnings
@@ -117,7 +111,7 @@ score <- function(input_file = NULL, metric, monthly = FALSE, verbose = FALSE) {
     warning("Invalid readings file format. Please ensure you selected Seconds as your travel time unit.")
   }
   
-  cat("Read ", nrow(DT), " records. Estimated processing time: ", round(nrow(DT) / 1E8, 2), " minutes.\n")
+  message("Read ", nrow(DT), " records. Estimated processing time: ", round(nrow(DT) / 1E8, 2), " minutes.\n")
 
   if(uniqueN(DT$measurement_tstamp) < 480)
     warning("Provided travel time readings file contains less than one week of data. Is this what you intended?")
@@ -143,7 +137,7 @@ score <- function(input_file = NULL, metric, monthly = FALSE, verbose = FALSE) {
   }
   
   if(verbose)
-    cat("Assigning NHPP Periods...\n")
+    message("Assigning NHPP Periods...\n")
   
   DT[dow %in% c(2, 3, 4, 5, 6),
      nhpp_period := cut(c(hod),
@@ -160,7 +154,7 @@ score <- function(input_file = NULL, metric, monthly = FALSE, verbose = FALSE) {
   DT[, nhpp_period := as.character(nhpp_period)] # Goodbye, factor, ruining my day
   
   if(verbose)
-    cat("Calculating Scores...\n")
+    message("Calculating Scores...\n")
   
   group <- quote(.(tmc_code, nhpp_period, period))
   
@@ -427,7 +421,7 @@ phed <- function(travel_time_readings, tmc_identification,
   
   # PHED per Capita:
   if(!is.na(population))
-    cat(paste("Peak Hour Excess Delay per Capita for ", year, ":", 
+    message(paste("Peak Hour Excess Delay per Capita for ", year, ":", 
               round(tmc_delay[, sum(delay) / population], 2), 
               "hours"))
 
@@ -443,11 +437,14 @@ phed <- function(travel_time_readings, tmc_identification,
 #' The reporting year is based on the TMC_Identification year (e.g. use 2021 TMC network for 2021 reporting in 2022)
 #' Writes the resulting file to hpms_year.txt
 #' 
+#' @param file Output file name. This is the HPMS submittal file. 
 #' @param tmc_identification Path to TMC_Identification.csv file provided by RITIS with travel time download
 #' @param lottr_scores A data.table of LOTTR scores produced using \code{score(..., metric == "LOTTR")}
 #' @param tttr_scores A data.table of TTTR scores produced using \code{score(..., metric == "TTTR")}
 #' @param phed_scores A data.table of of PHED scores produced using \code{phed()}
 #' @param occ_fac Occupancy factor. Default = 1.7
+#' 
+#' @return No return value, writes file to disk
 #' 
 #' @examples
 #' \dontrun{
@@ -456,11 +453,11 @@ phed <- function(travel_time_readings, tmc_identification,
 #' phed_scores <- phed("Readings.csv", "TMC_Identification.csv",
 #'                     speed_limits = fread("speed_limits.csv"),
 #'                     urban_code = 56139, pm_peak = 3, population = 52898)
-#' hpms("TMC_Identification.csv", lottr_scores, tttr_scores, phed_scores)
+#' hpms("hpms_2020.txt", "TMC_Identification.csv", lottr_scores, tttr_scores, phed_scores)
 #' }
 #' 
 #' @export
-hpms <- function(tmc_identification, lottr_scores, tttr_scores, phed_scores = NULL, occ_fac = 1.7) {
+hpms <- function(file, tmc_identification, lottr_scores, tttr_scores, phed_scores = NULL, occ_fac = 1.7) {
   # bind variables to an object to suppress R CMD check warnings
   Postal_Code <- isprimary <- nhs <- tmc <- f_system <- urban_code <- NULL
   faciltype <- miles <- nhs_pct <- direction <- aadt <- delay <- PHED <- NULL
@@ -475,7 +472,7 @@ hpms <- function(tmc_identification, lottr_scores, tttr_scores, phed_scores = NU
   yr <- first(year(DT$active_start_date))
   
   if(!("denominator_weekday_am" %in% colnames(lottr_scores))) {
-    cat("Error, numerator and denominator fields missing. Try rerunning score() with verbose = TRUE")
+    warning("Error, numerator and denominator fields missing. Try rerunning score() with verbose = TRUE")
     return()
   }
   
@@ -487,6 +484,8 @@ hpms <- function(tmc_identification, lottr_scores, tttr_scores, phed_scores = NU
   DT[isprimary == "0", nhs := -1]
   DT[nhs == 0, nhs := -1]
   
+  # DIR_AADT rounds UP to prevent HPMS validation errors in the edge case where
+  # bidirectional AADT is 1
   DT <- DT[, .(Year_Record = yr,
                State_Code = state_fips,
                Travel_Time_Code = tmc,
@@ -496,7 +495,7 @@ hpms <- function(tmc_identification, lottr_scores, tttr_scores, phed_scores = NU
                NHS = nhs,
                Segment_Length = round(miles * nhs_pct * 0.01, 3),
                Directionality = sapply(direction, function(x) switch(EXPR = x, "N" = 1, "S" = 2, "E" = 3, "W" = 4, 5)),
-               DIR_AADT = as.integer(aadt * ifelse(faciltype == 1, 1.0, 0.5)),
+               DIR_AADT = ceiling(aadt * ifelse(faciltype == 1, 1.0, 0.5)),
                OCC_FAC = occ_fac,
                METRIC_SOURCE = 1,
                Comments = "")]
@@ -544,6 +543,22 @@ hpms <- function(tmc_identification, lottr_scores, tttr_scores, phed_scores = NU
   DT <- merge(DT, lottr_merge, by = "Travel_Time_Code", all.x = TRUE)
   DT <- merge(DT, tttr_merge, by = "Travel_Time_Code",  all.x = TRUE)
   
+  # round travel time percentile columns to nearest integer per 23 CFR 490.511(e)(2)
+  tt_cols <- c("TT_AMP50PCT", "TT_AMP80PCT", "TT_MIDD50PCT", 
+    "TT_MIDD80PCT",  "TT_PMP50PCT", "TT_PMP80PCT", 
+    "TT_WE50PCT", "TT_WE80PCT", "TTT_AMP50PCT", "TTT_AMP95PCT", 
+    "TTT_MIDD50PCT", "TTT_MIDD95PCT", "TTT_PMP50PCT", 
+    "TTT_PMP95PCT", "TTT_WE50PCT", "TTT_WE95PCT", "TTT_OVN50PCT", 
+    "TTT_OVN95PCT")
+  DT[, (tt_cols) := lapply(.SD, as.integer), .SDcols = tt_cols]
+  
+  # fill missing travel time values with 0
+  DT[, (tt_cols) := lapply(.SD, nafill, fill = 0), .SDcols = tt_cols]
+  
+  # fill missing metrics with 1.00 (if there's no traffic, there's no delay)
+  metric_cols <- c("LOTTR_AMP", "LOTTR_MIDD", "LOTTR_PMP", "LOTTR_WE", 
+                   "TTTR_AMP", "TTTR_MIDD", "TTTR_PMP", "TTTR_WE", "TTTR_OVN")
+  DT[, (metric_cols) := lapply(.SD, nafill, fill = 1.00), .SDcols = metric_cols]
   
   DT <- DT[, c("Year_Record", "State_Code", "Travel_Time_Code", "F_System", "Urban_Code", 
                "Facility_Type", "NHS", "Segment_Length", "Directionality", "DIR_AADT", 
@@ -553,8 +568,8 @@ hpms <- function(tmc_identification, lottr_scores, tttr_scores, phed_scores = NU
                "TTTR_MIDD", "TTT_MIDD50PCT", "TTT_MIDD95PCT", "TTTR_PMP", "TTT_PMP50PCT", 
                "TTT_PMP95PCT", "TTTR_WE", "TTT_WE50PCT", "TTT_WE95PCT", "TTTR_OVN", "TTT_OVN50PCT", 
                "TTT_OVN95PCT", "PHED", "OCC_FAC", "METRIC_SOURCE", "Comments"), with = FALSE]
-  file_name <- paste0("hpms_", yr, ".txt")
-  cat("Writing output to", file_name) 
-  write.table(DT, quote = FALSE, sep = "|", na = "", row.names = FALSE, file = file_name)
-  return(TRUE)
+  
+  message("Writing output to", file) 
+  write.table(DT, quote = FALSE, sep = "|", na = "", row.names = FALSE, file = file)
+  return(invisible(NULL))
 }

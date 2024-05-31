@@ -231,7 +231,7 @@ Package author: Mark Egge, High Street (egge@highstreetconsulting.com)
 License: Mozilla Public License Version 2.0
 
 ## What's New
-
+* 2.0.2 (5/30/2024): hpms() function now requires a `file` argument, e.g. (`hpms("hpms_2023.txt", ...)`). 
 * May 2024: Renamed package from "pm3" to "tpm." Updated for compatibility with R 4.4+
 * June 15, 2022: Refactored function calls to provide greater consistency between measures. LOTTR and TTTR are now scored using `lottr()` and `tttr()` respectively, rather than `score()`. HPMS function now accepts PHED scores.
 * June 10, 2022: Added PHED function to calculate PHED given a travel time readings file and speed limits

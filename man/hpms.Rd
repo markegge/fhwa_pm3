@@ -5,6 +5,7 @@
 \title{Generate an HPMS Submission File}
 \usage{
 hpms(
+  file,
   tmc_identification,
   lottr_scores,
   tttr_scores,
@@ -13,6 +14,8 @@ hpms(
 )
 }
 \arguments{
+\item{file}{Output file name. This is the HPMS submittal file.}
+
 \item{tmc_identification}{Path to TMC_Identification.csv file provided by RITIS with travel time download}
 
 \item{lottr_scores}{A data.table of LOTTR scores produced using \code{score(..., metric == "LOTTR")}}
@@ -22,6 +25,9 @@ hpms(
 \item{phed_scores}{A data.table of of PHED scores produced using \code{phed()}}
 
 \item{occ_fac}{Occupancy factor. Default = 1.7}
+}
+\value{
+No return value, writes file to disk
 }
 \description{
 Generate an HPMS submission file in accordance with
@@ -37,7 +43,7 @@ tttr_scores <- tttr("data/Trucks/aldot_2019_trucks.csv", verbose = TRUE)
 phed_scores <- phed("Readings.csv", "TMC_Identification.csv",
                     speed_limits = fread("speed_limits.csv"),
                     urban_code = 56139, pm_peak = 3, population = 52898)
-hpms("TMC_Identification.csv", lottr_scores, tttr_scores, phed_scores)
+hpms("hpms_2020.txt", "TMC_Identification.csv", lottr_scores, tttr_scores, phed_scores)
 }
 
 }
