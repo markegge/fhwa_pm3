@@ -13,10 +13,15 @@ The package consists of the following:
 
 ## Installation
 
+Install from CRAN:
+```r
+install.packages("tpm")
+```
+
+Or, for the latest build, install from source:
 ```r
 library(devtools)
 devtools::install_github("markegge/fhwa_pm3")
-library(tpm)
 ```
 
 ### A Minimal Example
