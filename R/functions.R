@@ -158,14 +158,15 @@ score <- function(input_file = NULL, metric, monthly = FALSE, verbose = FALSE) {
   
   group <- quote(.(tmc_code, nhpp_period, period))
   
+  # round travel time percentile values to nearest integer per 23 CFR 490.511(e)(2)
   scores <- DT[!is.na(nhpp_period),
                .(Observations = .N,
-                 denominator = quantile(travel_time_seconds, 
+                 denominator = round(quantile(travel_time_seconds, 
                                         probs = c(0.5), 
-                                        type = 1),
-                 numerator = quantile(travel_time_seconds, 
+                                        type = 1)),
+                 numerator = round(quantile(travel_time_seconds, 
                                       probs = c(ifelse(metric == "LOTTR", 0.8, 0.95)),
-                                      type = 1)),
+                                      type = 1))),
                by = eval(group)]
   
   rm(DT) # R doesn't seem to garbage collect
@@ -544,13 +545,14 @@ hpms <- function(file, tmc_identification, lottr_scores, tttr_scores, phed_score
   DT <- merge(DT, tttr_merge, by = "Travel_Time_Code",  all.x = TRUE)
   
   # round travel time percentile columns to nearest integer per 23 CFR 490.511(e)(2)
-  tt_cols <- c("TT_AMP50PCT", "TT_AMP80PCT", "TT_MIDD50PCT", 
-    "TT_MIDD80PCT",  "TT_PMP50PCT", "TT_PMP80PCT", 
-    "TT_WE50PCT", "TT_WE80PCT", "TTT_AMP50PCT", "TTT_AMP95PCT", 
-    "TTT_MIDD50PCT", "TTT_MIDD95PCT", "TTT_PMP50PCT", 
-    "TTT_PMP95PCT", "TTT_WE50PCT", "TTT_WE95PCT", "TTT_OVN50PCT", 
+  tt_cols <- c("TT_AMP50PCT", "TT_AMP80PCT", "TT_MIDD50PCT",
+    "TT_MIDD80PCT",  "TT_PMP50PCT", "TT_PMP80PCT",
+    "TT_WE50PCT", "TT_WE80PCT", "TTT_AMP50PCT", "TTT_AMP95PCT",
+    "TTT_MIDD50PCT", "TTT_MIDD95PCT", "TTT_PMP50PCT",
+    "TTT_PMP95PCT", "TTT_WE50PCT", "TTT_WE95PCT", "TTT_OVN50PCT",
     "TTT_OVN95PCT")
-  DT[, (tt_cols) := lapply(.SD, as.integer), .SDcols = tt_cols]
+  # DT[, (tt_cols) := lapply(.SD, as.integer), .SDcols = tt_cols]
+  
   
   # fill missing travel time values with 0
   DT[, (tt_cols) := lapply(.SD, nafill, fill = 0), .SDcols = tt_cols]
@@ -559,6 +561,9 @@ hpms <- function(file, tmc_identification, lottr_scores, tttr_scores, phed_score
   metric_cols <- c("LOTTR_AMP", "LOTTR_MIDD", "LOTTR_PMP", "LOTTR_WE", 
                    "TTTR_AMP", "TTTR_MIDD", "TTTR_PMP", "TTTR_WE", "TTTR_OVN")
   DT[, (metric_cols) := lapply(.SD, nafill, fill = 1.00), .SDcols = metric_cols]
+  
+  # include exactly three decimal places
+  DT[, Segment_Length := sprintf('%.3f', Segment_Length)]
   
   DT <- DT[, c("Year_Record", "State_Code", "Travel_Time_Code", "F_System", "Urban_Code", 
                "Facility_Type", "NHS", "Segment_Length", "Directionality", "DIR_AADT", 
