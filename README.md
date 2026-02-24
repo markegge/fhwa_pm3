@@ -235,6 +235,8 @@ Package author: Mark Egge, High Street (egge@highstreetconsulting.com)
 
 License: Mozilla Public License Version 2.0
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.XXXXXXX.svg)](https://doi.org/10.5281/zenodo.XXXXXXX)
+
 ## What's New
 * 2.0.2 (5/30/2024): hpms() function now requires a `file` argument, e.g. (`hpms("hpms_2023.txt", ...)`). 
 * May 2024: Renamed package from "pm3" to "tpm." Updated for compatibility with R 4.4+
