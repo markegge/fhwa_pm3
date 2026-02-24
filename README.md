@@ -235,7 +235,7 @@ Package author: Mark Egge, High Street (egge@highstreetconsulting.com)
 
 License: Mozilla Public License Version 2.0
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.XXXXXXX.svg)](https://doi.org/10.5281/zenodo.XXXXXXX)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.18751290.svg)](https://doi.org/10.5281/zenodo.18751290)
 
 ## What's New
 * 2.0.2 (5/30/2024): hpms() function now requires a `file` argument, e.g. (`hpms("hpms_2023.txt", ...)`). 
